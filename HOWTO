@@ -1,0 +1,16 @@
+# List of various instrutions for setup/config
+
+* Develop on the cli (localhost)
+>> cd ~/dev/vim4rabbit
+>> claude
+
+* Claude + Jira Authentication (local laptop, not docker dev container)
+> Atlassian.com > Profile > Security > API Tokens >
+>> # Install official Atlassian Rovo MCP servier with Claude CLI
+claude mcp add rovodev-cli -- npx -y @jaggerxtrm/rovodev-mcp-tool
+claude mcp list  # test
+brew install jira-cli
+export JIRA_API_TOKEN # .bash_profile
+jira init
+
+
