@@ -46,6 +46,10 @@ ENV PATH="/usr/local/bin:${PATH}"
 
 RUN mkdir -p /home/${USERNAME}/.vim/plugged /home/${USERNAME}/.vim/autoload
 COPY config/vimrc /home/${USERNAME}/.vimrc
+COPY config/inputrc /home/${USERNAME}/.inputrc
 COPY config/plug.vim /home/${USERNAME}/.vim/autoload/plug.vim
+
+# install all custom plugins
+RUN vim -c "silent! PlugInstall" -c "qa!"
 
 CMD ["bash"]

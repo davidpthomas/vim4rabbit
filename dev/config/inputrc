@@ -1,0 +1,18 @@
+# flash screen instead of beeping
+set bell-style visible
+# prefix current CLI in vi mode with '# ' to comment out syntax
+set comment-begin # 
+# ignore case during tab completion
+set completion-ignore-case on
+# vi, not emacs
+set editing-mode vi
+# append slash to completed directories
+set mark-directories on
+# append slash to symlinks that are directories
+set mark-symlinked-directories on
+# complete on hidden files
+set match-hidden-files on
+# immediately show matches if multiple exist
+set show-all-if-ambiguous on
+# show filetype indicator on completion candidates
+set visible-stats on
