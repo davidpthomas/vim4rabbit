@@ -1,0 +1,21 @@
+*vim4rabbit.txt*  A Vim plugin powered by Python
+
+==============================================================================
+CONTENTS                                                   *vim4rabbit-contents*
+
+    1. Introduction .......................... |vim4rabbit-introduction|
+    2. Commands .............................. |vim4rabbit-commands|
+
+==============================================================================
+1. Introduction                                        *vim4rabbit-introduction*
+
+vim4rabbit is a Vim plugin with a Python backend.
+
+==============================================================================
+2. Commands                                               *vim4rabbit-commands*
+
+                                                                           *:CR*
+:CR                     Open a new horizontal buffer window with a message.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
