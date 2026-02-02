@@ -7,8 +7,18 @@ if exists('g:loaded_vim4rabbit')
 endif
 let g:loaded_vim4rabbit = 1
 
-" Define the :CR command
+" Define commands
 command! CR call vim4rabbit#OpenRabbitBuffer()
+command! CRTest call vim4rabbit#TestIndicator()
+command! CRReview call vim4rabbit#RunCodeRabbit()
 
-" Define the :Rabbit command with subcommands
-command! -nargs=1 -complete=customlist,vim4rabbit#CompleteRabbit Rabbit call vim4rabbit#Rabbit(<f-args>)
+" Set up statusline to include vim4rabbit spinner
+" Users can customize by setting g:vim4rabbit_statusline = 0
+if get(g:, 'vim4rabbit_statusline', 1)
+    if &statusline == ''
+        set statusline=%f\ %m%r%h%w%=%{vim4rabbit#GetStatusLine()}\ %l,%c\ %P
+    else
+        set statusline+=%{vim4rabbit#GetStatusLine()}
+    endif
+endif
+

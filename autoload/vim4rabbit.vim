@@ -1,9 +1,6 @@
 " vim4rabbit autoload functions
 " These functions are loaded on-demand when called
 
-" Store the help buffer number for reference
-let s:help_bufnr = -1
-
 function! vim4rabbit#OpenRabbitBuffer()
     " Open a new horizontal split
     new
@@ -16,7 +13,11 @@ function! vim4rabbit#OpenRabbitBuffer()
     setlocal filetype=vim4rabbit
 
     " Add content
-    call setline(1, 'All your vim are belong to us.')
+    call setline(1, 'Welcome to vim4rabbit - Your AI-powered code companion!')
+    call append(1, '')
+    call append(2, 'Commands:')
+    call append(3, '  :CR      - Open this buffer')
+    call append(4, '  :CRTest  - Test the spinner indicator')
 
     " Make buffer read-only
     setlocal nomodifiable
