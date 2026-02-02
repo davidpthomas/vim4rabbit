@@ -49,9 +49,12 @@ function! vim4rabbit#Help()
         endif
     endif
 
-    " Calculate 20% of total window height
+    " Calculate 20% of total window height (fixed at 5 lines for compact display)
     let l:height = float2nr(&lines * 0.2)
     if l:height < 5
+        let l:height = 5
+    endif
+    if l:height > 5
         let l:height = 5
     endif
 
@@ -74,22 +77,8 @@ function! vim4rabbit#Help()
     setlocal signcolumn=no
     setlocal winfixheight
 
-    " Build help content
-    let l:content = []
-    call add(l:content, '')
-    call add(l:content, '  vim4rabbit Help')
-    call add(l:content, '  ───────────────')
-    call add(l:content, '')
-    call add(l:content, '  Commands:')
-    call add(l:content, '    r  - Review code with CodeRabbit')
-    call add(l:content, '    q  - Quit this help screen')
-    call add(l:content, '')
-    call add(l:content, '  🐰 Happy coding with your rabbit friend! 🥕')
-
-    " Add content to buffer
-    setlocal modifiable
-    call setline(1, l:content)
-    setlocal nomodifiable
+    " Render help content
+    call vim4rabbit#RenderHelp()
 
     " Map 'q' to close the help buffer
     nnoremap <buffer> <silent> q :call vim4rabbit#CloseHelp()<CR>
@@ -102,6 +91,72 @@ function! vim4rabbit#Help()
 
     " Clean up when buffer is wiped
     autocmd BufWipeout <buffer> call vim4rabbit#CleanupHelp()
+endfunction
+
+" Render the help screen content with 3-column layout
+function! vim4rabbit#RenderHelp()
+    let l:width = winwidth(0)
+    let l:col_width = (l:width - 4) / 3
+
+    " Commands organized by column (each column can have multiple rows)
+    " Format: [key, description]
+    let l:col1 = [['r', 'Review']]
+    let l:col2 = []
+    let l:col3 = []
+
+    " Build the content lines
+    let l:content = []
+
+    " Header line with emoji
+    call add(l:content, '  🐰 vim4rabbit Help')
+    call add(l:content, '')
+
+    " Calculate max rows needed across all columns
+    let l:max_rows = max([len(l:col1), len(l:col2), len(l:col3), 1])
+
+    " Build command rows (3 columns)
+    for l:row in range(l:max_rows)
+        let l:line = '  '
+
+        " Column 1
+        if l:row < len(l:col1)
+            let l:cmd = l:col1[l:row]
+            let l:cell = '[' . l:cmd[0] . '] ' . l:cmd[1]
+        else
+            let l:cell = ''
+        endif
+        let l:line .= l:cell . repeat(' ', l:col_width - len(l:cell))
+
+        " Column 2
+        if l:row < len(l:col2)
+            let l:cmd = l:col2[l:row]
+            let l:cell = '[' . l:cmd[0] . '] ' . l:cmd[1]
+        else
+            let l:cell = ''
+        endif
+        let l:line .= l:cell . repeat(' ', l:col_width - len(l:cell))
+
+        " Column 3
+        if l:row < len(l:col3)
+            let l:cmd = l:col3[l:row]
+            let l:cell = '[' . l:cmd[0] . '] ' . l:cmd[1]
+        else
+            let l:cell = ''
+        endif
+        let l:line .= l:cell
+
+        call add(l:content, l:line)
+    endfor
+
+    " Bottom line with quit on the right
+    let l:quit_text = '[q] Quit'
+    let l:padding = l:width - len(l:quit_text) - 4
+    call add(l:content, repeat(' ', l:padding) . l:quit_text . '  ')
+
+    " Add content to buffer
+    setlocal modifiable
+    call setline(1, l:content)
+    setlocal nomodifiable
 endfunction
 
 " Close the help buffer
@@ -126,10 +181,16 @@ function! vim4rabbit#ResizeHelp()
     if l:height < 5
         let l:height = 5
     endif
+    if l:height > 5
+        let l:height = 5
+    endif
 
+    let l:cur_winnr = winnr()
     execute l:winnr . 'wincmd w'
     execute 'resize ' . l:height
-    wincmd p
+    " Re-render to adjust column widths
+    call vim4rabbit#RenderHelp()
+    execute l:cur_winnr . 'wincmd w'
 endfunction
 
 " Clean up when help buffer is closed
