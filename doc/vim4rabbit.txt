@@ -5,17 +5,44 @@ CONTENTS                                                   *vim4rabbit-contents*
 
     1. Introduction .......................... |vim4rabbit-introduction|
     2. Commands .............................. |vim4rabbit-commands|
+    3. Help Screen ........................... |vim4rabbit-help|
 
 ==============================================================================
 1. Introduction                                        *vim4rabbit-introduction*
 
-vim4rabbit is a Vim plugin with a Python backend.
+vim4rabbit is a Vim plugin with a Python backend that integrates CodeRabbit
+AI code review directly into Vim.
 
 ==============================================================================
 2. Commands                                               *vim4rabbit-commands*
 
                                                                            *:CR*
 :CR                     Open a new horizontal buffer window with a message.
+
+                                                                       *:Rabbit*
+:Rabbit {subcommand}    Execute a rabbit subcommand.
+
+Available subcommands:
+    help                Open the help screen showing available commands.
+
+==============================================================================
+3. Help Screen                                               *vim4rabbit-help*
+
+The help screen provides quick access to vim4rabbit commands. It opens in a
+horizontal split at the bottom of the screen, taking up 20% of the window
+height.
+
+To open the help screen: >
+    :Rabbit help
+<
+                                                       *vim4rabbit-help-commands*
+Available commands in the help screen:
+
+    r       Review code with CodeRabbit (coming soon)
+    q       Quit the help screen
+
+The help screen automatically resizes when the Vim window is resized to
+maintain its 20% height proportion.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:
