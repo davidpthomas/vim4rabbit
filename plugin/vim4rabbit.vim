@@ -10,4 +10,3 @@ let g:loaded_vim4rabbit = 1
 " Define the :Rabbit command with optional subcommands
 " Usage: :Rabbit [help|review]
 " Default: :Rabbit opens help
-command! -nargs=? -complete=customlist,vim4rabbit#CompleteRabbit Rabbit call vim4rabbit#Rabbit(<q-args>)
