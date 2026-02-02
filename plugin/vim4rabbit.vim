@@ -21,3 +21,4 @@ if get(g:, 'vim4rabbit_statusline', 1)
         set statusline+=%{vim4rabbit#GetStatusLine()}
     endif
 endif
+

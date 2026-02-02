@@ -1,179 +1,6 @@
 " vim4rabbit autoload functions
 " These functions are loaded on-demand when called
 
-" ==============================================================================
-" Processing State Variables
-" ==============================================================================
-let s:is_processing = 0
-let s:spinner_index = 0
-let s:spinner_timer = -1
-let s:processing_message = ''
-let s:job_output = []
-
-" Spinner style definitions
-let s:spinner_styles = {
-    \ 'block':   ['█','▓','▒','░','▒','▓'],
-    \ 'braille': ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'],
-    \ 'ascii':   ['|','/','-','\']
-    \ }
-
-" ==============================================================================
-" Indicator Functions
-" ==============================================================================
-
-function! vim4rabbit#StartProcessing(message) abort
-    let s:is_processing = 1
-    let s:spinner_index = 0
-    let s:processing_message = a:message
-    let s:job_output = []
-
-    echo '[vim4rabbit] ' . a:message
-
-    if s:spinner_timer != -1
-        call timer_stop(s:spinner_timer)
-    endif
-    let s:spinner_timer = timer_start(100, function('vim4rabbit#UpdateSpinner'), {'repeat': -1})
-endfunction
-
-function! vim4rabbit#StopProcessing(success, message) abort
-    let s:is_processing = 0
-    let s:processing_message = ''
-
-    if s:spinner_timer != -1
-        call timer_stop(s:spinner_timer)
-        let s:spinner_timer = -1
-    endif
-
-    redrawstatus
-
-    if a:success
-        echohl None
-        echo '[vim4rabbit] ' . a:message
-    else
-        echohl WarningMsg
-        echo '[vim4rabbit] ' . a:message
-        echohl None
-    endif
-endfunction
-
-function! s:GetSpinnerChar() abort
-    let l:style = get(g:, 'vim4rabbit_spinner_style', 'block')
-    if !has_key(s:spinner_styles, l:style)
-        let l:style = 'block'
-    endif
-    let l:chars = s:spinner_styles[l:style]
-    return l:chars[s:spinner_index % len(l:chars)]
-endfunction
-
-function! vim4rabbit#UpdateSpinner(timer) abort
-    if !s:is_processing
-        return
-    endif
-    let s:spinner_index += 1
-    redrawstatus
-endfunction
-
-function! vim4rabbit#GetStatusLine() abort
-    if !s:is_processing
-        return ''
-    endif
-    let l:spinner = s:GetSpinnerChar()
-    let l:msg = s:processing_message
-    if empty(l:msg)
-        let l:msg = 'Processing...'
-    endif
-    return '[vim4rabbit: ' . l:spinner . ' ' . l:msg . ']'
-endfunction
-
-" ==============================================================================
-" CodeRabbit Integration
-" ==============================================================================
-
-function! vim4rabbit#RunCodeRabbit() abort
-    call vim4rabbit#StartProcessing('Running CodeRabbit review...')
-
-    let s:job_output = []
-    let l:cmd = ['coderabbit', '--plain']
-
-    if has('nvim')
-        let s:coderabbit_job = jobstart(l:cmd, {
-            \ 'on_stdout': function('s:OnJobOutput'),
-            \ 'on_stderr': function('s:OnJobOutput'),
-            \ 'on_exit': function('s:OnJobExit')
-            \ })
-    else
-        let s:coderabbit_job = job_start(l:cmd, {
-            \ 'out_cb': function('s:OnJobOutputVim'),
-            \ 'err_cb': function('s:OnJobOutputVim'),
-            \ 'exit_cb': function('s:OnJobExitVim')
-            \ })
-    endif
-endfunction
-
-function! s:OnJobOutput(job_id, data, event) abort
-    call extend(s:job_output, a:data)
-endfunction
-
-function! s:OnJobExit(job_id, exit_code, event) abort
-    call vim4rabbit#StopProcessing(a:exit_code == 0, 'CodeRabbit review complete!')
-    call s:OpenResultsBuffer()
-endfunction
-
-function! s:OnJobOutputVim(channel, msg) abort
-    call add(s:job_output, a:msg)
-endfunction
-
-function! s:OnJobExitVim(job, exit_code) abort
-    call vim4rabbit#StopProcessing(a:exit_code == 0, 'CodeRabbit review complete!')
-    call s:OpenResultsBuffer()
-endfunction
-
-function! s:OpenResultsBuffer() abort
-    " Open new split for results
-    new
-    setlocal buftype=nofile
-    setlocal bufhidden=wipe
-    setlocal noswapfile
-    setlocal nobuflisted
-    setlocal filetype=markdown
-
-    " Add header and results
-    call setline(1, '# CodeRabbit Review Results')
-    call append(1, '═══════════════════════════════════════')
-    call append(2, '')
-
-    let l:line = 3
-    for l:output in s:job_output
-        if !empty(l:output)
-            call append(l:line, l:output)
-            let l:line += 1
-        endif
-    endfor
-
-    if l:line == 3
-        call append(3, '(No output from CodeRabbit)')
-    endif
-
-    setlocal nomodifiable
-endfunction
-
-" ==============================================================================
-" Test Function
-" ==============================================================================
-
-function! vim4rabbit#TestIndicator() abort
-    call vim4rabbit#StartProcessing('Testing indicator...')
-    call timer_start(3000, function('s:TestComplete'))
-endfunction
-
-function! s:TestComplete(timer) abort
-    call vim4rabbit#StopProcessing(1, 'Test complete!')
-endfunction
-
-" ==============================================================================
-" Buffer Functions
-" ==============================================================================
-
 function! vim4rabbit#OpenRabbitBuffer()
     " Open a new horizontal split
     new
@@ -194,4 +21,183 @@ function! vim4rabbit#OpenRabbitBuffer()
 
     " Make buffer read-only
     setlocal nomodifiable
+endfunction
+
+" Main Rabbit command dispatcher
+function! vim4rabbit#Rabbit(subcmd)
+    if a:subcmd ==# 'help'
+        call vim4rabbit#Help()
+    else
+        echo "Unknown rabbit command: " . a:subcmd
+        echo "Available commands: help"
+    endif
+endfunction
+
+" Command completion for :Rabbit
+function! vim4rabbit#CompleteRabbit(ArgLead, CmdLine, CursorPos)
+    let l:commands = ['help']
+    return filter(l:commands, 'v:val =~ "^" . a:ArgLead')
+endfunction
+
+" Open the help buffer at the bottom of the screen
+function! vim4rabbit#Help()
+    " If help buffer already exists, just focus it
+    if s:help_bufnr != -1 && bufexists(s:help_bufnr)
+        let l:winnr = bufwinnr(s:help_bufnr)
+        if l:winnr != -1
+            execute l:winnr . 'wincmd w'
+            return
+        endif
+    endif
+
+    " Calculate 20% of total window height (fixed at 5 lines for compact display)
+    let l:height = float2nr(&lines * 0.2)
+    if l:height < 5
+        let l:height = 5
+    endif
+    if l:height > 5
+        let l:height = 5
+    endif
+
+    " Open a new split at the bottom
+    execute 'botright ' . l:height . 'new'
+
+    " Store buffer number
+    let s:help_bufnr = bufnr('%')
+
+    " Set buffer options
+    setlocal buftype=nofile
+    setlocal bufhidden=wipe
+    setlocal noswapfile
+    setlocal nobuflisted
+    setlocal filetype=vim4rabbit
+    setlocal nocursorline
+    setlocal nocursorcolumn
+    setlocal nonumber
+    setlocal norelativenumber
+    setlocal signcolumn=no
+    setlocal winfixheight
+
+    " Render help content
+    call vim4rabbit#RenderHelp()
+
+    " Map 'q' to close the help buffer
+    nnoremap <buffer> <silent> q :call vim4rabbit#CloseHelp()<CR>
+
+    " Auto-resize on window resize
+    augroup vim4rabbit_help_resize
+        autocmd!
+        autocmd VimResized * call vim4rabbit#ResizeHelp()
+    augroup END
+
+    " Clean up when buffer is wiped
+    autocmd BufWipeout <buffer> call vim4rabbit#CleanupHelp()
+endfunction
+
+" Render the help screen content with 3-column layout
+function! vim4rabbit#RenderHelp()
+    let l:width = winwidth(0)
+    let l:col_width = (l:width - 4) / 3
+
+    " Commands organized by column (each column can have multiple rows)
+    " Format: [key, description]
+    let l:col1 = [['r', 'Review']]
+    let l:col2 = []
+    let l:col3 = []
+
+    " Build the content lines
+    let l:content = []
+
+    " Header line with emoji
+    call add(l:content, '  🐰 vim4rabbit Help')
+    call add(l:content, '')
+
+    " Calculate max rows needed across all columns
+    let l:max_rows = max([len(l:col1), len(l:col2), len(l:col3), 1])
+
+    " Build command rows (3 columns)
+    for l:row in range(l:max_rows)
+        let l:line = '  '
+
+        " Column 1
+        if l:row < len(l:col1)
+            let l:cmd = l:col1[l:row]
+            let l:cell = '[' . l:cmd[0] . '] ' . l:cmd[1]
+        else
+            let l:cell = ''
+        endif
+        let l:line .= l:cell . repeat(' ', l:col_width - len(l:cell))
+
+        " Column 2
+        if l:row < len(l:col2)
+            let l:cmd = l:col2[l:row]
+            let l:cell = '[' . l:cmd[0] . '] ' . l:cmd[1]
+        else
+            let l:cell = ''
+        endif
+        let l:line .= l:cell . repeat(' ', l:col_width - len(l:cell))
+
+        " Column 3
+        if l:row < len(l:col3)
+            let l:cmd = l:col3[l:row]
+            let l:cell = '[' . l:cmd[0] . '] ' . l:cmd[1]
+        else
+            let l:cell = ''
+        endif
+        let l:line .= l:cell
+
+        call add(l:content, l:line)
+    endfor
+
+    " Bottom line with quit on the right
+    let l:quit_text = '[q] Quit'
+    let l:padding = l:width - len(l:quit_text) - 4
+    call add(l:content, repeat(' ', l:padding) . l:quit_text . '  ')
+
+    " Add content to buffer
+    setlocal modifiable
+    call setline(1, l:content)
+    setlocal nomodifiable
+endfunction
+
+" Close the help buffer
+function! vim4rabbit#CloseHelp()
+    if s:help_bufnr != -1 && bufexists(s:help_bufnr)
+        execute 'bwipeout ' . s:help_bufnr
+    endif
+endfunction
+
+" Resize help buffer to maintain 20% height
+function! vim4rabbit#ResizeHelp()
+    if s:help_bufnr == -1 || !bufexists(s:help_bufnr)
+        return
+    endif
+
+    let l:winnr = bufwinnr(s:help_bufnr)
+    if l:winnr == -1
+        return
+    endif
+
+    let l:height = float2nr(&lines * 0.2)
+    if l:height < 5
+        let l:height = 5
+    endif
+    if l:height > 5
+        let l:height = 5
+    endif
+
+    let l:cur_winnr = winnr()
+    execute l:winnr . 'wincmd w'
+    execute 'resize ' . l:height
+    " Re-render to adjust column widths
+    call vim4rabbit#RenderHelp()
+    execute l:cur_winnr . 'wincmd w'
+endfunction
+
+" Clean up when help buffer is closed
+function! vim4rabbit#CleanupHelp()
+    let s:help_bufnr = -1
+    augroup vim4rabbit_help_resize
+        autocmd!
+    augroup END
 endfunction

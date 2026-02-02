@@ -1,3 +1,7 @@
-
 * Claude + Jira integration
 * Launch docker dev container with mounted configs for CR & Claude
+
+# List of things to consider doing
+[ ] * Setup CR CLI
+[X] * Claude + Jira integration
+
