@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl gnupg git build-essential ncurses-dev python3-dev \
     lua5.3 liblua5.3-dev ruby-dev libperl-dev pkg-config gettext sudo bash unzip wget \
     vim \
+    python3-pytest \
   && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js 18 (Claude Code requires Node.js 18+)
