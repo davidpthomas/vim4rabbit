@@ -5,32 +5,21 @@
 let s:help_bufnr = -1
 let s:review_bufnr = -1
 
-function! vim4rabbit#OpenRabbitBuffer()
-    " Open a new horizontal split
-    new
-
-    " Set buffer options
-    setlocal buftype=nofile
-    setlocal bufhidden=wipe
-    setlocal noswapfile
-    setlocal nobuflisted
-    setlocal filetype=vim4rabbit
-
-    " Add content
-    call setline(1, 'All your vim are belong to us.')
-
-    " Make buffer read-only
-    setlocal nomodifiable
-endfunction
-
 " Main Rabbit command dispatcher
 function! vim4rabbit#Rabbit(subcmd)
-    if a:subcmd ==# 'help'
+    let l:cmd = a:subcmd
+
+    " Default to 'help' if no subcommand provided
+    if l:cmd ==# ''
+        let l:cmd = 'help'
+    endif
+
+    if l:cmd ==# 'help'
         call vim4rabbit#Help()
-    elseif a:subcmd ==# 'review'
+    elseif l:cmd ==# 'review'
         call vim4rabbit#Review()
     else
-        echo "Unknown rabbit command: " . a:subcmd
+        echo "Unknown rabbit command: " . l:cmd
         echo "Available commands: help, review"
     endif
 endfunction

@@ -7,8 +7,5 @@ if exists('g:loaded_vim4rabbit')
 endif
 let g:loaded_vim4rabbit = 1
 
-" Define the :CR command
-command! CR call vim4rabbit#OpenRabbitBuffer()
-
-" Define the :Rabbit command with subcommands
-command! -nargs=1 -complete=customlist,vim4rabbit#CompleteRabbit Rabbit call vim4rabbit#Rabbit(<f-args>)
+" Define the :Rabbit command with optional subcommands
+command! -nargs=? -complete=customlist,vim4rabbit#CompleteRabbit Rabbit call vim4rabbit#Rabbit(<q-args>)
