@@ -12,6 +12,12 @@ let s:review_bufnr = -1
 let s:review_job = v:null
 let s:review_output = []
 
+" Timer state for spinner animation
+let s:spinner_timer = v:null
+let s:spinner_index = 0
+let s:spinner_frames = ['|', '/', '-', '\']
+let s:review_start_time = 0
+
 " Main Rabbit command dispatcher
 function! vim4rabbit#Rabbit(subcmd)
     let l:cmd = a:subcmd
@@ -195,10 +201,68 @@ function! vim4rabbit#Review()
     call vim4rabbit#RunReviewAsync()
 endfunction
 
+" Start the spinner animation timer
+function! s:StartSpinner()
+    let s:spinner_index = 0
+    let s:review_start_time = localtime()
+    let s:spinner_timer = timer_start(200, function('s:UpdateSpinner'), {'repeat': -1})
+endfunction
+
+" Stop and cleanup the spinner timer
+function! s:StopSpinner()
+    if s:spinner_timer != v:null
+        call timer_stop(s:spinner_timer)
+        let s:spinner_timer = v:null
+    endif
+    let s:spinner_index = 0
+    let s:review_start_time = 0
+endfunction
+
+" Update buffer with current spinner frame and elapsed time
+function! s:UpdateSpinner(timer_id)
+    " Check if buffer still exists
+    if s:review_bufnr == -1 || !bufexists(s:review_bufnr)
+        call s:StopSpinner()
+        return
+    endif
+
+    " Get current spinner frame
+    let l:frame = s:spinner_frames[s:spinner_index]
+    let s:spinner_index = (s:spinner_index + 1) % len(s:spinner_frames)
+
+    " Calculate elapsed time
+    let l:elapsed = localtime() - s:review_start_time
+    let l:minutes = l:elapsed / 60
+    let l:seconds = l:elapsed % 60
+    let l:elapsed_str = printf('%d:%02d', l:minutes, l:seconds)
+
+    " Get content from Python
+    let l:content = py3eval('vim4rabbit.vim_get_animated_loading_content(' . string(l:frame) . ', ' . string(l:elapsed_str) . ')')
+
+    " Update buffer
+    let l:winnr = bufwinnr(s:review_bufnr)
+    if l:winnr == -1
+        call s:StopSpinner()
+        return
+    endif
+
+    let l:cur_winnr = winnr()
+    execute l:winnr . 'wincmd w'
+    setlocal modifiable
+    silent! %delete _
+    call setline(1, l:content)
+    setlocal nomodifiable
+    execute l:cur_winnr . 'wincmd w'
+    redraw
+endfunction
+
 " Run CodeRabbit CLI asynchronously
 function! vim4rabbit#RunReviewAsync()
     " Reset output collector
     let s:review_output = []
+
+    " Start spinner animation
+    call s:StartSpinner()
 
     " Start the job
     let l:cmd = ['coderabbit', '--plain']
@@ -221,6 +285,9 @@ endfunction
 
 " Callback when job exits
 function! s:OnReviewExit(job, exit_status)
+    " Stop spinner animation
+    call s:StopSpinner()
+
     " Clear the job reference
     let s:review_job = v:null
 
@@ -249,6 +316,9 @@ endfunction
 
 " Cancel the running review and close buffer
 function! vim4rabbit#CancelReview()
+    " Stop spinner animation
+    call s:StopSpinner()
+
     if s:review_job != v:null && job_status(s:review_job) ==# 'run'
         call job_stop(s:review_job, 'kill')
         let s:review_job = v:null
@@ -309,6 +379,9 @@ endfunction
 
 " Clean up when review buffer is closed
 function! vim4rabbit#CleanupReview()
+    " Stop spinner animation
+    call s:StopSpinner()
+
     " Cancel any running job
     if s:review_job != v:null && job_status(s:review_job) ==# 'run'
         call job_stop(s:review_job, 'kill')

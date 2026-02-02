@@ -10,7 +10,7 @@ __version__ = "0.1.0"
 from typing import List
 
 from .cli import run_review
-from .content import format_cancelled_message, format_loading_message, format_review_output, render_help
+from .content import format_animated_loading_message, format_cancelled_message, format_loading_message, format_review_output, render_help
 from .parser import parse_review_issues
 
 
@@ -101,6 +101,22 @@ def vim_get_cancelled_content() -> List[str]:
         List of strings for cancelled state
     """
     return format_cancelled_message()
+
+
+def vim_get_animated_loading_content(spinner_frame: str, elapsed_time: str) -> List[str]:
+    """
+    Get the animated loading message content with spinner and elapsed time.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_get_animated_loading_content(...)')
+
+    Args:
+        spinner_frame: Current spinner frame character
+        elapsed_time: Elapsed time string (e.g., '0:05')
+
+    Returns:
+        List of strings for animated loading state
+    """
+    return format_animated_loading_message(spinner_frame, elapsed_time)
 
 
 def vim_parse_review_output(output: str) -> dict:

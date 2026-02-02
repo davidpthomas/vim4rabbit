@@ -6,6 +6,7 @@ from vim4rabbit.content import (
     format_review_output,
     format_loading_message,
     format_cancelled_message,
+    format_animated_loading_message,
 )
 from vim4rabbit.types import ReviewResult, ReviewIssue
 
@@ -119,3 +120,45 @@ class TestFormatCancelledMessage:
         content = format_cancelled_message()
         full_text = "\n".join(content)
         assert "[q] to close" in full_text
+
+
+class TestFormatAnimatedLoadingMessage:
+    """Tests for format_animated_loading_message function."""
+
+    def test_spinner_frame_appears_in_output(self):
+        """Test that spinner frame appears in output."""
+        content = format_animated_loading_message("|", "0:05")
+        full_text = "\n".join(content)
+        assert "|" in full_text
+
+        content = format_animated_loading_message("/", "0:10")
+        full_text = "\n".join(content)
+        assert "/" in full_text
+
+    def test_elapsed_time_appears_in_output(self):
+        """Test that elapsed time appears in output."""
+        content = format_animated_loading_message("|", "0:05")
+        full_text = "\n".join(content)
+        assert "0:05" in full_text
+
+        content = format_animated_loading_message("-", "1:23")
+        full_text = "\n".join(content)
+        assert "1:23" in full_text
+
+    def test_cancel_option_is_shown(self):
+        """Test that cancel option is shown."""
+        content = format_animated_loading_message("|", "0:00")
+        full_text = "\n".join(content)
+        assert "[c] to cancel" in full_text
+
+    def test_contains_coderabbit_header(self):
+        """Test that header with coderabbit is present."""
+        content = format_animated_loading_message("|", "0:00")
+        full_text = "\n".join(content)
+        assert "coderabbit" in full_text
+
+    def test_contains_running_message(self):
+        """Test that running message is present."""
+        content = format_animated_loading_message("|", "0:00")
+        full_text = "\n".join(content)
+        assert "Running coderabbit" in full_text

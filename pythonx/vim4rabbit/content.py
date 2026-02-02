@@ -159,3 +159,23 @@ def format_cancelled_message() -> List[str]:
         "",
         "  Press [q] to close",
     ]
+
+
+def format_animated_loading_message(spinner_frame: str, elapsed_time: str) -> List[str]:
+    """
+    Format the animated loading message with spinner and elapsed time.
+
+    Args:
+        spinner_frame: Current spinner frame character (e.g., '|', '/', '-', '\\')
+        elapsed_time: Elapsed time string (e.g., '0:05', '1:23')
+
+    Returns:
+        List of strings for the animated loading state
+    """
+    return [
+        "  \U0001F430 coderabbit",  # rabbit emoji
+        "",
+        f"  {spinner_frame} Running coderabbit... ({elapsed_time})",
+        "",
+        "  Press [c] to cancel",
+    ]
