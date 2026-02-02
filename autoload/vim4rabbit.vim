@@ -5,6 +5,12 @@
 let s:help_bufnr = -1
 let s:review_bufnr = -1
 
+" Spinner state for async operations
+let s:spinner_timer = -1
+let s:spinner_index = 0
+let s:spinner_chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+let s:job_output = ''
+
 " Token usage tracking
 " Initialize with defaults; updated by API calls or cache file
 let g:vim4rabbit_tokens = {'used': 0, 'limit': 0, 'provider': 'rabbit'}
@@ -146,8 +152,9 @@ function! vim4rabbit#Help()
     call vim4rabbit#RenderHelp()
 
     " Map keybindings for help buffer
+    " All command keys close the help buffer before executing
     nnoremap <buffer> <silent> q :call vim4rabbit#CloseHelp()<CR>
-    nnoremap <buffer> <silent> r :call vim4rabbit#Review()<CR>
+    nnoremap <buffer> <silent> r :call vim4rabbit#CloseHelp() \| call vim4rabbit#Review()<CR>
 
     " Auto-resize on window resize
     augroup vim4rabbit_help_resize
@@ -296,10 +303,11 @@ function! vim4rabbit#Review()
     setlocal norelativenumber
     setlocal signcolumn=no
     setlocal winfixwidth
+    setlocal nolist
 
-    " Show loading message
+    " Show loading message with spinner
     setlocal modifiable
-    call setline(1, ['  🐰 coderabbit', '', '  Running coderabbit...'])
+    call setline(1, ['  🐰 coderabbit', '', '  Running coderabbit... ' . s:spinner_chars[0]])
     setlocal nomodifiable
     redraw
 
@@ -310,27 +318,94 @@ function! vim4rabbit#Review()
     autocmd BufWipeout <buffer> call vim4rabbit#CleanupReview()
 
     " Run the review asynchronously
-    call vim4rabbit#RunReview()
+    call vim4rabbit#RunReviewAsync()
 endfunction
 
-" Run CodeRabbit CLI and display results
-function! vim4rabbit#RunReview()
-    " Run coderabbit CLI
-    let l:output = system('coderabbit --plain 2>&1')
-    let l:exit_code = v:shell_error
+" Start the spinner animation
+function! vim4rabbit#StartSpinner()
+    let s:spinner_index = 0
+    let s:spinner_timer = timer_start(80, function('vim4rabbit#UpdateSpinner'), {'repeat': -1})
+endfunction
 
+" Stop the spinner animation
+function! vim4rabbit#StopSpinner()
+    if s:spinner_timer != -1
+        call timer_stop(s:spinner_timer)
+        let s:spinner_timer = -1
+    endif
+endfunction
+
+" Update spinner character in the review buffer
+function! vim4rabbit#UpdateSpinner(timer_id)
+    if s:review_bufnr == -1 || !bufexists(s:review_bufnr)
+        call vim4rabbit#StopSpinner()
+        return
+    endif
+
+    let l:winnr = bufwinnr(s:review_bufnr)
+    if l:winnr == -1
+        call vim4rabbit#StopSpinner()
+        return
+    endif
+
+    " Cycle to next spinner character
+    let s:spinner_index = (s:spinner_index + 1) % len(s:spinner_chars)
+    let l:spinner = s:spinner_chars[s:spinner_index]
+
+    " Update the spinner line in the buffer
+    let l:cur_winnr = winnr()
+    execute l:winnr . 'wincmd w'
+    setlocal modifiable
+    call setline(3, '  Running coderabbit... ' . l:spinner)
+    setlocal nomodifiable
+    redraw
+    execute l:cur_winnr . 'wincmd w'
+endfunction
+
+" Run CodeRabbit CLI asynchronously
+function! vim4rabbit#RunReviewAsync()
+    " Reset job output
+    let s:job_output = ''
+
+    " Start spinner
+    call vim4rabbit#StartSpinner()
+
+    " Run coderabbit asynchronously
+    let l:job = job_start(['sh', '-c', 'coderabbit --plain 2>&1'], {
+        \ 'out_cb': function('vim4rabbit#OnReviewOutput'),
+        \ 'exit_cb': function('vim4rabbit#OnReviewExit'),
+        \ 'out_mode': 'raw'
+        \ })
+endfunction
+
+" Callback for job output
+function! vim4rabbit#OnReviewOutput(channel, msg)
+    let s:job_output .= a:msg
+endfunction
+
+" Callback when job exits
+function! vim4rabbit#OnReviewExit(job, exit_code)
+    " Stop spinner
+    call vim4rabbit#StopSpinner()
+
+    " Process results
+    call vim4rabbit#DisplayReviewResults(s:job_output, a:exit_code)
+endfunction
+
+" Display review results (extracted from old RunReview)
+function! vim4rabbit#DisplayReviewResults(output, exit_code)
     " Parse the output and create summary
     let l:content = ['  🐰 coderabbit', '']
 
-    if l:exit_code != 0
+    if a:exit_code != 0
         call add(l:content, '  ⚠️  Error running coderabbit:')
         call add(l:content, '')
-        for l:line in split(l:output, "\n")
+        for l:line in split(a:output, "\n")
             call add(l:content, '    ' . l:line)
         endfor
     else
         " Parse issues separated by equal signs (====+)
-        let l:issues = vim4rabbit#ParseReviewIssues(l:output)
+        let l:issues = vim4rabbit#ParseReviewIssues(a:output)
 
         if empty(l:issues)
             call add(l:content, '  ✓ No issues found!')
@@ -548,5 +623,6 @@ endfunction
 
 " Clean up when review buffer is closed
 function! vim4rabbit#CleanupReview()
+    call vim4rabbit#StopSpinner()
     let s:review_bufnr = -1
 endfunction

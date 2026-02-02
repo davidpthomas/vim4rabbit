@@ -1,0 +1,166 @@
+
+  Found 5 issue(s):
+
+  ════════════════════════════════════════
+  Issue #1
+  ────────────────────────────────────────
+    Starting CodeRabbit review in plain text mode...
+    
+    Connecting to review service
+    Setting up
+    Analyzing
+    Reviewing
+    
+
+  ════════════════════════════════════════
+  Issue #2
+  ────────────────────────────────────────
+    File: samples/flipcsv/.flipcsv.py.swp
+    Line: 1
+    Type: potential_issue
+    
+    Comment:
+    Remove Vim swap file from version control.
+    
+    This .swp file is a temporary Vim editor artifact that should not be committed. It contains local machine information and serves no purpose in the repository.
+    
+    Remove this file and add *.swp to .gitignore to prevent future accidental commits:
+    
+    # Vim swap files
+    *.swp
+    *.swo
+    *~
+    
+    Prompt for AI Agent:
+    In @samples/flipcsv/.flipcsv.py.swp at line 1, Remove the committed Vim swap file ".flipcsv.py.swp" (delete it from the repo and commit the removal) and update the repository .gitignore to include Vim swap patterns (.swp, .swo, *~) so future swap files are ignored; ensure you stage the deletion of samples/flipcsv/.flipcsv.py.swp, add the ignore patterns to .gitignore, and commit both changes in one commit.
+    
+    
+    
+
+  ════════════════════════════════════════
+  Issue #3
+  ────────────────────────────────────────
+    File: samples/flipcsv/flipcsv.py
+    Line: 18 to 22
+    Type: potential_issue
+    
+    Comment:
+    Critical bug: Inconsistent coordinate return order.
+    
+    The function returns coordinates in different orders depending on the code path:
+    - Line 20 (country match): returns (longitude, latitude)
+    - Line 22 (fallback): returns (latitude, longitude)
+    
+    The caller at line 90 expects (lat, lon), so the country-match path returns swapped coordinates, causing incorrect weather lookups.
+    
+    
+    
+    🐛 Proposed fix
+    
+                     for result in data["results"]:
+                         if country and result.get("country", "").lower() == country.lower():
+    -                        return result["longitude"], result["latitude"]
+    +                        return result["latitude"], result["longitude"]
+                     result = data["results"][0]
+                     return result["latitude"], result["longitude"]
+    
+    Prompt for AI Agent:
+    In @samples/flipcsv/flipcsv.py around lines 18 - 22, The country-match branch returns (longitude, latitude) while the fallback returns (latitude, longitude), causing swapped coordinates for callers expecting (lat, lon); in the loop that iterates over data["results"] (the block returning result["longitude"], result["latitude"]), change that branch to return result["latitude"], result["longitude"] so both paths return (lat, lon) consistently (locate the loop/return using the variable name result and the surrounding data["results"] iteration to apply the fix).
+    
+    
+    
+
+  ════════════════════════════════════════
+  Issue #4
+  ────────────────────────────────────────
+    File: samples/flipcsv/flipcsv.py
+    Line: 77 to 78
+    Type: potential_issue
+    
+    Comment:
+    Skip weather fetch entirely when city column is missing.
+    
+    The warning is good, but the code continues to call geocode_city("", "") for every row, making unnecessary API calls that will always fail or return invalid coordinates.
+    
+    
+    
+    ♻️ Proposed fix
+    
+         if not city_col:
+             print("Warning: No 'city' column found. Skipping weather fetch.")
+    +        # Write output without weather data
+    +        output_rows = [{field: row[field] for field in reversed_fields} |
+    +                       {"temperature": "N/A", "humidity": "N/A", "wind_speed": "N/A", "conditions": "N/A"}
+    +                       for row in rows]
+    +    else:
+    +        output_rows = []
+    +        for row in rows:
+    +            # ... existing weather fetch logic ...
+    
+    
+    Alternatively, add an early return or restructure to skip the per-row weather loop entirely when city_col is None.
+    
+    Prompt for AI Agent:
+    In @samples/flipcsv/flipcsv.py around lines 77 - 78, The code warns when city_col is missing but still proceeds to call geocode_city("", "") per-row; update the control flow to skip the per-row weather-fetch loop entirely when city_col is falsy (e.g., add an early return or wrap the loop in an if city_col check) so geocode_city and related functions (geocode_city, fetch_weather, the per-row iteration) are not invoked when no city column exists.
+    
+    
+    
+
+  ════════════════════════════════════════
+  Issue #5
+  ────────────────────────────────────────
+    File: autoload/vim4rabbit.vim
+    Line: 364 to 378
+    Type: nitpick
+    
+    Comment:
+    Job cannot be cancelled if buffer is closed.
+    
+    The job handle is stored in a local variable l:job and discarded. If the user closes the review buffer while the job is running, the job continues in the background with no way to cancel it.
+    
+    Consider storing the job handle to allow cancellation in CleanupReview:
+    
+    
+    
+    ♻️ Proposed fix
+    
+    Add a script-local variable to store the job handle:
+    
+     let s:spinner_timer = -1
+     let s:spinner_index = 0
+     let s:spinner_chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+     let s:job_output = ''
+    +let s:review_job = v:null
+    
+    
+    Store and stop the job:
+    
+     function! vim4rabbit#RunReviewAsync()
+         let s:job_output = ''
+         call vim4rabbit#StartSpinner()
+    -    let l:job = job_start(['sh', '-c', 'coderabbit --plain 2>&1'], {
+    +    let s:review_job = job_start(['sh', '-c', 'coderabbit --plain 2>&1'], {
+             \ 'out_cb': function('vim4rabbit#OnReviewOutput'),
+             \ 'exit_cb': function('vim4rabbit#OnReviewExit'),
+             \ 'out_mode': 'raw'
+             \ })
+     endfunction
+    
+    
+     function! vim4rabbit#CleanupReview()
+         call vim4rabbit#StopSpinner()
+    +    if s:review_job != v:null && job_status(s:review_job) ==# 'run'
+    +        call job_stop(s:review_job)
+    +    endif
+    +    let s:review_job = v:null
+         let s:review_bufnr = -1
+     endfunction
+    
+    Prompt for AI Agent:
+    In @autoload/vim4rabbit.vim around lines 364 - 378, The RunReviewAsync function currently creates the job in a local variable l:job and drops the handle, so if the user closes the buffer the job cannot be cancelled; modify vim4rabbit#RunReviewAsync to assign the job handle to a script-local variable (e.g., s:review_job) instead of l:job, ensure vim4rabbit#OnReviewExit clears s:review_job when the job finishes, and update CleanupReview to check for s:review_job and call job_stop(s:review_job) (and then unset it) so the running coderabbit job can be cancelled when the buffer is closed.
+    
+    
+    
+    Review completed ✔
+
+  Press [q] to close

@@ -1,0 +1,5 @@
+country,city,age,name,temperature,humidity,wind_speed,conditions
+USA,New York,30,Alice,N/A,N/A,N/A,N/A
+UK,London,25,Bob,N/A,N/A,N/A,N/A
+France,Paris,35,Charlie,8.7°C,77%,9.7km/h,Overcast
+Japan,Tokyo,28,Diana,2.4°C,58%,6.0km/h,Clear sky
