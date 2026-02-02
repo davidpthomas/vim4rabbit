@@ -46,7 +46,7 @@ set showmode
 " print unprintable chars with '^'
 set list
 " Characters to show in list mode
-" set listchars=tab:»·,trail:·,eol:^,extends:>,precedes:<
+" set listchars=tab:ï¿½ï¿½,trail:ï¿½,eol:^,extends:>,precedes:<
 set listchars=eol:^,extends:>,precedes:<
 " set width of text line (max 80)
 set textwidth=200
@@ -148,6 +148,6 @@ call plug#begin()
 " List your plugins here
 Plug 'tpope/vim-sensible'
 Plug 'preservim/nerdtree'
-Plug 'davidpthomas/vim4rabbit'
+Plug '~/dev/vim4rabbit'
 
 call plug#end()
