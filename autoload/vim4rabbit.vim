@@ -5,6 +5,79 @@
 let s:help_bufnr = -1
 let s:review_bufnr = -1
 
+" Token usage tracking
+" Initialize with defaults; updated by API calls or cache file
+let g:vim4rabbit_tokens = {'used': 0, 'limit': 0, 'provider': 'rabbit'}
+
+" Statusline component - returns formatted token usage for far-right display
+" Usage: set statusline+=%{vim4rabbit#Statusline()}
+function! vim4rabbit#Statusline()
+    let l:t = g:vim4rabbit_tokens
+    if l:t.limit == 0
+        return ''
+    endif
+
+    let l:pct = (l:t.used * 100) / l:t.limit
+
+    " Format: 🐰 45% or with warning threshold
+    if l:pct >= 90
+        return '%#ErrorMsg#🐰 ' . l:pct . '%%%*'
+    elseif l:pct >= 75
+        return '%#WarningMsg#🐰 ' . l:pct . '%%%*'
+    endif
+    return '🐰 ' . l:pct . '%'
+endfunction
+
+" Detailed statusline with token counts (alternative format)
+function! vim4rabbit#StatuslineVerbose()
+    let l:t = g:vim4rabbit_tokens
+    if l:t.limit == 0
+        return ''
+    endif
+
+    let l:used_k = l:t.used / 1000
+    let l:limit_k = l:t.limit / 1000
+    let l:pct = (l:t.used * 100) / l:t.limit
+
+    return printf('🐰 %dk/%dk (%d%%)', l:used_k, l:limit_k, l:pct)
+endfunction
+
+" Update token usage from cache file (~/.vim4rabbit/usage.json)
+" Expected format: {"used": 12345, "limit": 100000, "provider": "coderabbit"}
+function! vim4rabbit#LoadTokenUsage()
+    let l:file = expand('~/.vim4rabbit/usage.json')
+    if filereadable(l:file)
+        try
+            let l:content = join(readfile(l:file), '')
+            let l:data = json_decode(l:content)
+            if type(l:data) == v:t_dict
+                let g:vim4rabbit_tokens.used = get(l:data, 'used', 0)
+                let g:vim4rabbit_tokens.limit = get(l:data, 'limit', 0)
+                let g:vim4rabbit_tokens.provider = get(l:data, 'provider', 'rabbit')
+            endif
+        catch
+            " Silently ignore parse errors
+        endtry
+    endif
+    redrawstatus
+endfunction
+
+" Set token usage directly (call from API response handlers)
+function! vim4rabbit#SetTokenUsage(used, limit, ...)
+    let g:vim4rabbit_tokens.used = a:used
+    let g:vim4rabbit_tokens.limit = a:limit
+    if a:0 > 0
+        let g:vim4rabbit_tokens.provider = a:1
+    endif
+    redrawstatus
+endfunction
+
+" Start polling for token usage updates (optional)
+function! vim4rabbit#StartTokenPolling(interval_ms)
+    call vim4rabbit#LoadTokenUsage()
+    call timer_start(a:interval_ms, {-> vim4rabbit#LoadTokenUsage()}, {'repeat': -1})
+endfunction
+
 " Main Rabbit command dispatcher
 function! vim4rabbit#Rabbit(subcmd)
     let l:cmd = a:subcmd
@@ -276,6 +349,20 @@ function! vim4rabbit#RunReview()
                 let l:issue_num += 1
             endfor
         endif
+
+        " Fetch and update token usage after successful review
+        call vim4rabbit#FetchTokenUsage()
+    endif
+
+    " Add token usage to review output if available
+    if g:vim4rabbit_tokens.limit > 0
+        let l:pct = (g:vim4rabbit_tokens.used * 100) / g:vim4rabbit_tokens.limit
+        call add(l:content, '')
+        call add(l:content, '  ────────────────────────────────────────')
+        call add(l:content, printf('  Token usage: %d / %d (%d%%)',
+            \ g:vim4rabbit_tokens.used,
+            \ g:vim4rabbit_tokens.limit,
+            \ l:pct))
     endif
 
     call add(l:content, '')
@@ -297,6 +384,121 @@ function! vim4rabbit#RunReview()
             redraw
         endif
     endif
+endfunction
+
+" Fetch token usage from CodeRabbit CLI
+" Tries multiple methods: 'coderabbit usage', config file, or cache
+function! vim4rabbit#FetchTokenUsage()
+    " Method 1: Try 'coderabbit usage --json' command
+    let l:usage_output = system('coderabbit usage --json 2>/dev/null')
+    if v:shell_error == 0 && l:usage_output !~# '^\s*$'
+        call vim4rabbit#ParseUsageJson(l:usage_output)
+        return
+    endif
+
+    " Method 2: Try 'coderabbit usage' plain text
+    let l:usage_output = system('coderabbit usage 2>/dev/null')
+    if v:shell_error == 0 && l:usage_output !~# '^\s*$'
+        call vim4rabbit#ParseUsagePlain(l:usage_output)
+        return
+    endif
+
+    " Method 3: Check CodeRabbit config directory for usage file
+    let l:cr_usage_file = expand('~/.config/coderabbit/usage.json')
+    if filereadable(l:cr_usage_file)
+        try
+            let l:content = join(readfile(l:cr_usage_file), '')
+            call vim4rabbit#ParseUsageJson(l:content)
+            return
+        catch
+        endtry
+    endif
+
+    " Method 4: Fall back to our cache file
+    call vim4rabbit#LoadTokenUsage()
+endfunction
+
+" Parse JSON usage output from CodeRabbit
+" Expected formats:
+"   {"used": 12345, "limit": 100000}
+"   {"usage": {"tokens_used": 12345, "tokens_limit": 100000}}
+"   {"plan": {"usage": 12345, "limit": 100000}}
+function! vim4rabbit#ParseUsageJson(json_str)
+    try
+        let l:data = json_decode(a:json_str)
+        if type(l:data) != v:t_dict
+            return
+        endif
+
+        let l:used = 0
+        let l:limit = 0
+
+        " Try different JSON structures
+        if has_key(l:data, 'used') && has_key(l:data, 'limit')
+            let l:used = l:data.used
+            let l:limit = l:data.limit
+        elseif has_key(l:data, 'usage') && type(l:data.usage) == v:t_dict
+            let l:used = get(l:data.usage, 'tokens_used', get(l:data.usage, 'used', 0))
+            let l:limit = get(l:data.usage, 'tokens_limit', get(l:data.usage, 'limit', 0))
+        elseif has_key(l:data, 'plan') && type(l:data.plan) == v:t_dict
+            let l:used = get(l:data.plan, 'usage', get(l:data.plan, 'used', 0))
+            let l:limit = get(l:data.plan, 'limit', 0)
+        elseif has_key(l:data, 'tokens_used') && has_key(l:data, 'tokens_limit')
+            let l:used = l:data.tokens_used
+            let l:limit = l:data.tokens_limit
+        endif
+
+        if l:limit > 0
+            call vim4rabbit#SetTokenUsage(l:used, l:limit, 'coderabbit')
+            call vim4rabbit#SaveTokenCache()
+        endif
+    catch
+        " JSON parse failed, ignore
+    endtry
+endfunction
+
+" Parse plain text usage output from CodeRabbit
+" Looks for patterns like:
+"   "Used: 12,345 / 100,000 tokens"
+"   "Usage: 45%"
+"   "12345/100000"
+function! vim4rabbit#ParseUsagePlain(text)
+    let l:used = 0
+    let l:limit = 0
+
+    " Pattern: "Used: 12,345 / 100,000" or "12345 / 100000"
+    let l:match = matchlist(a:text, '\(\d[0-9,]*\)\s*/\s*\(\d[0-9,]*\)')
+    if !empty(l:match)
+        let l:used = str2nr(substitute(l:match[1], ',', '', 'g'))
+        let l:limit = str2nr(substitute(l:match[2], ',', '', 'g'))
+    endif
+
+    " Pattern: "tokens_used: 12345" and "tokens_limit: 100000"
+    if l:limit == 0
+        let l:used_match = matchlist(a:text, 'tokens\?[_\s]*used[:\s]\+\(\d[0-9,]*\)')
+        let l:limit_match = matchlist(a:text, 'tokens\?[_\s]*limit[:\s]\+\(\d[0-9,]*\)')
+        if !empty(l:used_match) && !empty(l:limit_match)
+            let l:used = str2nr(substitute(l:used_match[1], ',', '', 'g'))
+            let l:limit = str2nr(substitute(l:limit_match[1], ',', '', 'g'))
+        endif
+    endif
+
+    if l:limit > 0
+        call vim4rabbit#SetTokenUsage(l:used, l:limit, 'coderabbit')
+        call vim4rabbit#SaveTokenCache()
+    endif
+endfunction
+
+" Save token usage to cache file for persistence
+function! vim4rabbit#SaveTokenCache()
+    let l:dir = expand('~/.vim4rabbit')
+    if !isdirectory(l:dir)
+        call mkdir(l:dir, 'p')
+    endif
+
+    let l:file = l:dir . '/usage.json'
+    let l:data = json_encode(g:vim4rabbit_tokens)
+    call writefile([l:data], l:file)
 endfunction
 
 " Parse review output into separate issues

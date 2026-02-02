@@ -46,7 +46,7 @@ set showmode
 " print unprintable chars with '^'
 set list
 " Characters to show in list mode
-" set listchars=tab:»·,trail:·,eol:^,extends:>,precedes:<
+" set listchars=tab:ï¿½ï¿½,trail:ï¿½,eol:^,extends:>,precedes:<
 set listchars=eol:^,extends:>,precedes:<
 " set width of text line (max 80)
 set textwidth=200
@@ -101,7 +101,9 @@ set showmatch
 " searches wrap around end of file
 set wrapscan
 
-set statusline=%<%y\ %t\ %m%=[%l\-%c\ %p%%]
+" Statusline with vim4rabbit token usage on far right
+" Format: [filetype] filename [modified]    [line-col %]  ðŸ° 45%
+set statusline=%<%y\ %t\ %m%=[%l\-%c\ %p%%]\ %{vim4rabbit#Statusline()}
 
 "------------------------------------------------------------------------------
 " Misc
