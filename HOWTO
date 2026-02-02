@@ -13,4 +13,4 @@ brew install jira-cli
 export JIRA_API_TOKEN # .bash_profile
 jira init
 
-
+d
