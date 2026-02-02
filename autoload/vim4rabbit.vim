@@ -175,6 +175,7 @@ function! vim4rabbit#Review()
     setlocal norelativenumber
     setlocal signcolumn=no
     setlocal winfixwidth
+    setlocal nolist
 
     " Show loading message with cancel option
     let l:loading = py3eval('vim4rabbit.vim_get_loading_content()')
