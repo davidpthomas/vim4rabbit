@@ -83,27 +83,3 @@ def run_review() -> ReviewResult:
         issues=issues,
         raw_output=output,
     )
-
-
-def run_usage_json() -> Tuple[str, bool]:
-    """
-    Run 'coderabbit usage --json' command.
-
-    Returns:
-        Tuple of (output, success)
-    """
-    output, exit_code = run_coderabbit(["usage", "--json"])
-    success = exit_code == 0 and output.strip()
-    return output, success
-
-
-def run_usage_plain() -> Tuple[str, bool]:
-    """
-    Run 'coderabbit usage' command (plain text).
-
-    Returns:
-        Tuple of (output, success)
-    """
-    output, exit_code = run_coderabbit(["usage"])
-    success = exit_code == 0 and output.strip()
-    return output, success

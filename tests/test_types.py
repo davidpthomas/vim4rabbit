@@ -1,61 +1,7 @@
 """Tests for vim4rabbit.types module."""
 
 import pytest
-from vim4rabbit.types import TokenUsage, ReviewIssue, ReviewResult
-
-
-class TestTokenUsage:
-    """Tests for TokenUsage dataclass."""
-
-    def test_default_values(self):
-        """Test default initialization."""
-        usage = TokenUsage()
-        assert usage.used == 0
-        assert usage.limit == 0
-        assert usage.provider == "rabbit"
-
-    def test_custom_values(self):
-        """Test custom initialization."""
-        usage = TokenUsage(used=5000, limit=10000, provider="coderabbit")
-        assert usage.used == 5000
-        assert usage.limit == 10000
-        assert usage.provider == "coderabbit"
-
-    def test_to_dict(self):
-        """Test conversion to dict."""
-        usage = TokenUsage(used=5000, limit=10000, provider="coderabbit")
-        d = usage.to_dict()
-        assert d == {"used": 5000, "limit": 10000, "provider": "coderabbit"}
-
-    def test_from_dict(self):
-        """Test creation from dict."""
-        data = {"used": 5000, "limit": 10000, "provider": "coderabbit"}
-        usage = TokenUsage.from_dict(data)
-        assert usage.used == 5000
-        assert usage.limit == 10000
-        assert usage.provider == "coderabbit"
-
-    def test_from_dict_partial(self):
-        """Test creation from partial dict."""
-        usage = TokenUsage.from_dict({"used": 100})
-        assert usage.used == 100
-        assert usage.limit == 0
-        assert usage.provider == "rabbit"
-
-    def test_percentage_normal(self):
-        """Test percentage calculation."""
-        usage = TokenUsage(used=4500, limit=10000)
-        assert usage.percentage == 45
-
-    def test_percentage_zero_limit(self):
-        """Test percentage with zero limit."""
-        usage = TokenUsage(used=100, limit=0)
-        assert usage.percentage == 0
-
-    def test_percentage_full(self):
-        """Test percentage at 100%."""
-        usage = TokenUsage(used=10000, limit=10000)
-        assert usage.percentage == 100
+from vim4rabbit.types import ReviewIssue, ReviewResult
 
 
 class TestReviewIssue:

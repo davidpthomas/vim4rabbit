@@ -2,73 +2,15 @@
 " These functions are loaded on-demand when called
 "
 " Architecture: This file contains UI/buffer operations only.
-" All logic (parsing, CLI execution, caching) is in Python (pythonx/vim4rabbit/).
+" All logic (parsing, CLI execution) is in Python (pythonx/vim4rabbit/).
 
 " Store buffer numbers for reference
 let s:help_bufnr = -1
 let s:review_bufnr = -1
 
-" Token usage tracking
-" Initialize with defaults; updated by API calls or cache file
-let g:vim4rabbit_tokens = {'used': 0, 'limit': 0, 'provider': 'rabbit'}
-
-" Statusline component - returns formatted token usage for far-right display
-" Usage: set statusline+=%{vim4rabbit#Statusline()}
-function! vim4rabbit#Statusline()
-    let l:t = g:vim4rabbit_tokens
-    if l:t.limit == 0
-        return ''
-    endif
-
-    let l:pct = (l:t.used * 100) / l:t.limit
-
-    " Format: 🐰 45% or with warning threshold
-    if l:pct >= 90
-        return '%#ErrorMsg#🐰 ' . l:pct . '%%%*'
-    elseif l:pct >= 75
-        return '%#WarningMsg#🐰 ' . l:pct . '%%%*'
-    endif
-    return '🐰 ' . l:pct . '%'
-endfunction
-
-" Detailed statusline with token counts (alternative format)
-function! vim4rabbit#StatuslineVerbose()
-    let l:t = g:vim4rabbit_tokens
-    if l:t.limit == 0
-        return ''
-    endif
-
-    let l:used_k = l:t.used / 1000
-    let l:limit_k = l:t.limit / 1000
-    let l:pct = (l:t.used * 100) / l:t.limit
-
-    return printf('🐰 %dk/%dk (%d%%)', l:used_k, l:limit_k, l:pct)
-endfunction
-
-" Update token usage from cache file (~/.vim4rabbit/usage.json)
-function! vim4rabbit#LoadTokenUsage()
-    let l:data = py3eval('vim4rabbit.vim_load_cached_usage()')
-    let g:vim4rabbit_tokens.used = l:data.used
-    let g:vim4rabbit_tokens.limit = l:data.limit
-    let g:vim4rabbit_tokens.provider = l:data.provider
-    redrawstatus
-endfunction
-
-" Set token usage directly (call from API response handlers)
-function! vim4rabbit#SetTokenUsage(used, limit, ...)
-    let l:provider = a:0 > 0 ? a:1 : 'rabbit'
-    let l:data = py3eval('vim4rabbit.vim_set_usage(' . a:used . ', ' . a:limit . ', "' . l:provider . '")')
-    let g:vim4rabbit_tokens.used = l:data.used
-    let g:vim4rabbit_tokens.limit = l:data.limit
-    let g:vim4rabbit_tokens.provider = l:data.provider
-    redrawstatus
-endfunction
-
-" Start polling for token usage updates (optional)
-function! vim4rabbit#StartTokenPolling(interval_ms)
-    call vim4rabbit#LoadTokenUsage()
-    call timer_start(a:interval_ms, {-> vim4rabbit#LoadTokenUsage()}, {'repeat': -1})
-endfunction
+" Store the running job for cancellation
+let s:review_job = v:null
+let s:review_output = []
 
 " Main Rabbit command dispatcher
 function! vim4rabbit#Rabbit(subcmd)
@@ -234,70 +176,131 @@ function! vim4rabbit#Review()
     setlocal signcolumn=no
     setlocal winfixwidth
 
-    " Show loading message (from Python)
+    " Show loading message with cancel option
     let l:loading = py3eval('vim4rabbit.vim_get_loading_content()')
     setlocal modifiable
     call setline(1, l:loading)
     setlocal nomodifiable
     redraw
 
-    " Map 'q' to close the review buffer
+    " Map 'q' to close and 'c' to cancel
     nnoremap <buffer> <silent> q :call vim4rabbit#CloseReview()<CR>
+    nnoremap <buffer> <silent> c :call vim4rabbit#CancelReview()<CR>
 
     " Clean up when buffer is wiped
     autocmd BufWipeout <buffer> call vim4rabbit#CleanupReview()
 
     " Run the review asynchronously
-    call vim4rabbit#RunReview()
+    call vim4rabbit#RunReviewAsync()
 endfunction
 
-" Run CodeRabbit CLI and display results (logic in Python)
-function! vim4rabbit#RunReview()
-    " Run review via Python
-    let l:result = py3eval('vim4rabbit.vim_run_review()')
+" Run CodeRabbit CLI asynchronously
+function! vim4rabbit#RunReviewAsync()
+    " Reset output collector
+    let s:review_output = []
 
-    " Fetch and update token usage after review
-    if l:result.success
-        call vim4rabbit#FetchTokenUsage()
+    " Start the job
+    let l:cmd = ['coderabbit', '--plain']
+    let s:review_job = job_start(l:cmd, {
+        \ 'out_cb': function('s:OnReviewOutput'),
+        \ 'err_cb': function('s:OnReviewOutput'),
+        \ 'exit_cb': function('s:OnReviewExit'),
+        \ 'mode': 'raw',
+        \ })
+
+    if job_status(s:review_job) ==# 'fail'
+        call s:DisplayReviewError('Failed to start coderabbit')
     endif
+endfunction
+
+" Callback for job output (stdout and stderr)
+function! s:OnReviewOutput(channel, msg)
+    call add(s:review_output, a:msg)
+endfunction
+
+" Callback when job exits
+function! s:OnReviewExit(job, exit_status)
+    " Clear the job reference
+    let s:review_job = v:null
+
+    " Check if buffer still exists
+    if s:review_bufnr == -1 || !bufexists(s:review_bufnr)
+        return
+    endif
+
+    " Combine output
+    let l:output = join(s:review_output, '')
 
     " Format output via Python
-    let l:content = py3eval('vim4rabbit.vim_format_review(' .
-        \ l:result.success . ', ' .
-        \ string(l:result.issues) . ', ' .
-        \ string(l:result.error_message) . ', ' .
-        \ g:vim4rabbit_tokens.used . ', ' .
-        \ g:vim4rabbit_tokens.limit . ')')
+    if a:exit_status != 0
+        let l:content = py3eval('vim4rabbit.vim_format_review(False, [], ' . string(l:output) . ')')
+    else
+        let l:result = py3eval('vim4rabbit.vim_parse_review_output(' . string(l:output) . ')')
+        let l:content = py3eval('vim4rabbit.vim_format_review(' .
+            \ l:result.success . ', ' .
+            \ string(l:result.issues) . ', ' .
+            \ string(l:result.error_message) . ')')
+    endif
 
     " Update buffer content
+    call s:UpdateReviewBuffer(l:content)
+endfunction
+
+" Cancel the running review and close buffer
+function! vim4rabbit#CancelReview()
+    if s:review_job != v:null && job_status(s:review_job) ==# 'run'
+        call job_stop(s:review_job, 'kill')
+        let s:review_job = v:null
+    endif
+
+    " Close the buffer
     if s:review_bufnr != -1 && bufexists(s:review_bufnr)
-        let l:winnr = bufwinnr(s:review_bufnr)
-        if l:winnr != -1
-            let l:cur_winnr = winnr()
-            execute l:winnr . 'wincmd w'
-            setlocal modifiable
-            " Clear buffer and add new content
-            silent! %delete _
-            call setline(1, l:content)
-            setlocal nomodifiable
-            " Move cursor to top
-            normal! gg
-            redraw
-        endif
+        execute 'bwipeout ' . s:review_bufnr
     endif
 endfunction
 
-" Fetch token usage from CodeRabbit CLI (via Python)
-function! vim4rabbit#FetchTokenUsage()
-    let l:data = py3eval('vim4rabbit.vim_fetch_usage()')
-    let g:vim4rabbit_tokens.used = l:data.used
-    let g:vim4rabbit_tokens.limit = l:data.limit
-    let g:vim4rabbit_tokens.provider = l:data.provider
-    redrawstatus
+" Update the review buffer with content
+function! s:UpdateReviewBuffer(content)
+    if s:review_bufnr == -1 || !bufexists(s:review_bufnr)
+        return
+    endif
+
+    let l:winnr = bufwinnr(s:review_bufnr)
+    if l:winnr == -1
+        return
+    endif
+
+    let l:cur_winnr = winnr()
+    execute l:winnr . 'wincmd w'
+    setlocal modifiable
+    " Clear buffer and add new content
+    silent! %delete _
+    call setline(1, a:content)
+    setlocal nomodifiable
+    " Move cursor to top
+    normal! gg
+
+    " Remove cancel mapping since job is done
+    silent! nunmap <buffer> c
+
+    execute l:cur_winnr . 'wincmd w'
+    redraw
+endfunction
+
+" Display an error in the review buffer
+function! s:DisplayReviewError(message)
+    let l:content = py3eval('vim4rabbit.vim_format_review(False, [], ' . string(a:message) . ')')
+    call s:UpdateReviewBuffer(l:content)
 endfunction
 
 " Close the review buffer
 function! vim4rabbit#CloseReview()
+    " Cancel any running job first
+    if s:review_job != v:null && job_status(s:review_job) ==# 'run'
+        call job_stop(s:review_job, 'kill')
+        let s:review_job = v:null
+    endif
+
     if s:review_bufnr != -1 && bufexists(s:review_bufnr)
         execute 'bwipeout ' . s:review_bufnr
     endif
@@ -305,5 +308,10 @@ endfunction
 
 " Clean up when review buffer is closed
 function! vim4rabbit#CleanupReview()
+    " Cancel any running job
+    if s:review_job != v:null && job_status(s:review_job) ==# 'run'
+        call job_stop(s:review_job, 'kill')
+    endif
+    let s:review_job = v:null
     let s:review_bufnr = -1
 endfunction

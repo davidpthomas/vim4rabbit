@@ -10,9 +10,8 @@ __version__ = "0.1.0"
 from typing import List
 
 from .cli import run_review
-from .content import format_loading_message, format_review_output, render_help
-from .tokens import fetch_usage, get_current_usage, get_usage_dict, load_cached_usage, set_current_usage
-from .types import TokenUsage
+from .content import format_cancelled_message, format_loading_message, format_review_output, render_help
+from .parser import parse_review_issues
 
 
 # =============================================================================
@@ -36,70 +35,6 @@ def vim_run_review() -> dict:
     return result.to_dict()
 
 
-def vim_fetch_usage() -> dict:
-    """
-    Fetch token usage from CodeRabbit CLI.
-
-    Called from VimScript: py3eval('vim4rabbit.vim_fetch_usage()')
-
-    Returns:
-        Dict with keys:
-        - used: int
-        - limit: int
-        - provider: str
-    """
-    usage = fetch_usage()
-    if usage:
-        return usage.to_dict()
-    return get_usage_dict()
-
-
-def vim_load_cached_usage() -> dict:
-    """
-    Load token usage from cache file only.
-
-    Called from VimScript: py3eval('vim4rabbit.vim_load_cached_usage()')
-
-    Returns:
-        Dict with 'used', 'limit', 'provider' keys
-    """
-    usage = load_cached_usage()
-    if usage:
-        return usage.to_dict()
-    return get_usage_dict()
-
-
-def vim_get_usage() -> dict:
-    """
-    Get current token usage (from memory).
-
-    Called from VimScript: py3eval('vim4rabbit.vim_get_usage()')
-
-    Returns:
-        Dict with 'used', 'limit', 'provider' keys
-    """
-    return get_usage_dict()
-
-
-def vim_set_usage(used: int, limit: int, provider: str = "rabbit") -> dict:
-    """
-    Set token usage directly.
-
-    Called from VimScript: py3eval('vim4rabbit.vim_set_usage(...)')
-
-    Args:
-        used: Tokens used
-        limit: Token limit
-        provider: Provider name
-
-    Returns:
-        Dict with updated values
-    """
-    usage = TokenUsage(used=used, limit=limit, provider=provider)
-    set_current_usage(usage)
-    return usage.to_dict()
-
-
 def vim_render_help(width: int) -> List[str]:
     """
     Render help content for the given window width.
@@ -119,8 +54,6 @@ def vim_format_review(
     success: bool,
     issues: list,
     error_message: str,
-    usage_used: int = 0,
-    usage_limit: int = 0,
 ) -> List[str]:
     """
     Format review results for display.
@@ -131,8 +64,6 @@ def vim_format_review(
         success: Whether review succeeded
         issues: List of issues (each issue is list of line strings)
         error_message: Error message if failed
-        usage_used: Token usage (used)
-        usage_limit: Token usage (limit)
 
     Returns:
         List of strings (lines) for the review buffer
@@ -145,11 +76,7 @@ def vim_format_review(
         error_message=error_message,
     )
 
-    usage = None
-    if usage_limit > 0:
-        usage = TokenUsage(used=usage_used, limit=usage_limit)
-
-    return format_review_output(result, usage)
+    return format_review_output(result)
 
 
 def vim_get_loading_content() -> List[str]:
@@ -162,6 +89,44 @@ def vim_get_loading_content() -> List[str]:
         List of strings for loading state
     """
     return format_loading_message()
+
+
+def vim_get_cancelled_content() -> List[str]:
+    """
+    Get the cancelled message content.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_get_cancelled_content()')
+
+    Returns:
+        List of strings for cancelled state
+    """
+    return format_cancelled_message()
+
+
+def vim_parse_review_output(output: str) -> dict:
+    """
+    Parse raw review output from async job.
+
+    Called from VimScript after async job completes.
+
+    Args:
+        output: Raw output from coderabbit CLI
+
+    Returns:
+        Dict with keys:
+        - success: bool
+        - issues: list of lists (each issue is a list of line strings)
+        - error_message: str (empty if success)
+    """
+    from .types import ReviewResult
+
+    issues = parse_review_issues(output)
+    result = ReviewResult(
+        success=True,
+        issues=issues,
+        raw_output=output,
+    )
+    return result.to_dict()
 
 
 # =============================================================================

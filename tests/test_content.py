@@ -5,8 +5,9 @@ from vim4rabbit.content import (
     render_help,
     format_review_output,
     format_loading_message,
+    format_cancelled_message,
 )
-from vim4rabbit.types import ReviewResult, ReviewIssue, TokenUsage
+from vim4rabbit.types import ReviewResult, ReviewIssue
 
 
 class TestRenderHelp:
@@ -76,24 +77,6 @@ class TestFormatReviewOutput:
         assert "Error" in full_text
         assert "Command not found" in full_text
 
-    def test_with_token_usage(self):
-        """Test that token usage is displayed."""
-        result = ReviewResult(success=True, issues=[])
-        usage = TokenUsage(used=5000, limit=10000)
-        content = format_review_output(result, usage)
-        full_text = "\n".join(content)
-        assert "Token usage" in full_text
-        assert "5000" in full_text
-        assert "10000" in full_text
-        assert "50%" in full_text
-
-    def test_without_token_usage(self):
-        """Test when no token usage provided."""
-        result = ReviewResult(success=True, issues=[])
-        content = format_review_output(result, None)
-        full_text = "\n".join(content)
-        assert "Token usage" not in full_text
-
     def test_close_instruction(self):
         """Test that close instruction is present."""
         result = ReviewResult(success=True, issues=[])
@@ -112,3 +95,27 @@ class TestFormatLoadingMessage:
         full_text = "\n".join(content)
         assert "coderabbit" in full_text
         assert "Running" in full_text
+
+    def test_loading_shows_cancel_option(self):
+        """Test that loading message shows cancel option."""
+        content = format_loading_message()
+        full_text = "\n".join(content)
+        assert "[c] to cancel" in full_text
+
+
+class TestFormatCancelledMessage:
+    """Tests for format_cancelled_message function."""
+
+    def test_cancelled_content(self):
+        """Test cancelled message content."""
+        content = format_cancelled_message()
+        assert len(content) >= 3
+        full_text = "\n".join(content)
+        assert "coderabbit" in full_text
+        assert "cancelled" in full_text.lower()
+
+    def test_cancelled_shows_close_option(self):
+        """Test that cancelled message shows close option."""
+        content = format_cancelled_message()
+        full_text = "\n".join(content)
+        assert "[q] to close" in full_text

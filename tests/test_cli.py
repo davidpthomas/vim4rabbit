@@ -1,15 +1,12 @@
 """Tests for vim4rabbit.cli module."""
 
-from unittest.mock import patch, MagicMock
-import subprocess
+from unittest.mock import patch
 
 import pytest
 from vim4rabbit.cli import (
     run_command,
     run_coderabbit,
     run_review,
-    run_usage_json,
-    run_usage_plain,
 )
 
 
@@ -86,50 +83,3 @@ class TestRunReview:
         result = run_review()
         assert result.success is True
         assert len(result.issues) == 0
-
-
-class TestRunUsageJson:
-    """Tests for run_usage_json function."""
-
-    @patch("vim4rabbit.cli.run_coderabbit")
-    def test_successful_json(self, mock_run):
-        """Test successful JSON usage fetch."""
-        mock_run.return_value = ('{"used": 1000, "limit": 5000}', 0)
-        output, success = run_usage_json()
-        assert success is True
-        assert "1000" in output
-        mock_run.assert_called_once_with(["usage", "--json"])
-
-    @patch("vim4rabbit.cli.run_coderabbit")
-    def test_failed_json(self, mock_run):
-        """Test failed JSON usage fetch."""
-        mock_run.return_value = ("Error", 1)
-        output, success = run_usage_json()
-        assert success is False
-
-    @patch("vim4rabbit.cli.run_coderabbit")
-    def test_empty_output(self, mock_run):
-        """Test empty output."""
-        mock_run.return_value = ("  ", 0)
-        output, success = run_usage_json()
-        assert success is False
-
-
-class TestRunUsagePlain:
-    """Tests for run_usage_plain function."""
-
-    @patch("vim4rabbit.cli.run_coderabbit")
-    def test_successful_plain(self, mock_run):
-        """Test successful plain usage fetch."""
-        mock_run.return_value = ("Used: 1000 / 5000", 0)
-        output, success = run_usage_plain()
-        assert success is True
-        assert "1000" in output
-        mock_run.assert_called_once_with(["usage"])
-
-    @patch("vim4rabbit.cli.run_coderabbit")
-    def test_failed_plain(self, mock_run):
-        """Test failed plain usage fetch."""
-        mock_run.return_value = ("Error", 1)
-        output, success = run_usage_plain()
-        assert success is False

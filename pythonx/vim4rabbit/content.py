@@ -6,7 +6,7 @@ This module handles generating content for Vim buffers.
 
 from typing import List, Tuple
 
-from .types import ReviewResult, TokenUsage
+from .types import ReviewResult
 
 
 # Help content configuration
@@ -86,10 +86,7 @@ def render_help(width: int) -> List[str]:
     return content
 
 
-def format_review_output(
-    result: ReviewResult,
-    usage: TokenUsage = None,
-) -> List[str]:
+def format_review_output(result: ReviewResult) -> List[str]:
     """
     Format review output for display in buffer.
 
@@ -97,7 +94,6 @@ def format_review_output(
 
     Args:
         result: ReviewResult from running CodeRabbit
-        usage: Optional TokenUsage to display at the bottom
 
     Returns:
         List of strings (lines) for the review buffer
@@ -127,13 +123,6 @@ def format_review_output(
                 for line in issue.lines:
                     content.append(f"    {line}")
 
-    # Add token usage if available
-    if usage and usage.limit > 0:
-        pct = usage.percentage
-        content.append("")
-        content.append("  " + "\u2500" * 40)  # single line
-        content.append(f"  Token usage: {usage.used} / {usage.limit} ({pct}%)")
-
     content.append("")
     content.append("  Press [q] to close")
 
@@ -151,4 +140,22 @@ def format_loading_message() -> List[str]:
         "  \U0001F430 coderabbit",  # rabbit emoji
         "",
         "  Running coderabbit...",
+        "",
+        "  Press [c] to cancel",
+    ]
+
+
+def format_cancelled_message() -> List[str]:
+    """
+    Format the cancelled message for the review buffer.
+
+    Returns:
+        List of strings for the cancelled state
+    """
+    return [
+        "  \U0001F430 coderabbit",  # rabbit emoji
+        "",
+        "  \u2717 Review cancelled",  # X mark
+        "",
+        "  Press [q] to close",
     ]
