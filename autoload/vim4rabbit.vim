@@ -234,9 +234,9 @@ function! s:OnReviewExit(job, exit_status)
 
     " Format output via Python
     if a:exit_status != 0
-        let l:content = py3eval('vim4rabbit.vim_format_review(False, [], ' . string(l:output) . ')')
+        let l:content = py3eval("vim4rabbit.vim_format_review(False, [], ' . string(l:output) . ')")
     else
-        let l:result = py3eval('vim4rabbit.vim_parse_review_output(' . string(l:output) . ')')
+        let l:result = py3eval("vim4rabbit.vim_parse_review_output(' . string(l:output) . ')")
         let l:content = py3eval('vim4rabbit.vim_format_review(' .
             \ l:result.success . ', ' .
             \ string(l:result.issues) . ', ' .
