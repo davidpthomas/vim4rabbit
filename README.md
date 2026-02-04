@@ -1,6 +1,13 @@
 # vim4rabbit
 
-Easily perform code reviews with CodeRabbit directly in Vim.
+A Vim plugin for running CodeRabbit code reviews directly in Vim.
+
+## Features
+
+- Run CodeRabbit reviews on uncommitted changes without leaving Vim
+- Async execution with animated loading indicator
+- Clean review panel with formatted output
+- Help system with keybinding reference
 
 ## Installation
 
@@ -33,7 +40,19 @@ git clone https://github.com/davidpthomas/vim4rabbit.git ~/.vim/bundle/vim4rabbi
 
 | Command | Description |
 |---------|-------------|
-| `:CR`   | Open the CodeRabbit buffer |
+| `:Rabbit` | Open the help panel (default) |
+| `:Rabbit help` | Open the help panel |
+| `:Rabbit review` | Run CodeRabbit review on uncommitted changes |
+
+### Keybindings
+
+In the help panel:
+- `q` - Close the panel
+- `ru` - Close help and run review
+
+In the review panel:
+- `q` - Close the panel
+- `c` - Cancel the running review (while loading)
 
 ## Requirements
 
@@ -74,16 +93,39 @@ Test the CLI is working:
 coderabbit --help
 ```
 
-### CLI Usage
-
-| Command | Description |
-|---------|-------------|
-| `coderabbit` | Launch interactive code review |
-| `coderabbit --plain` | Plain text output |
-| `coderabbit --base <branch>` | Specify base branch |
-| `cr` | Short alias for `coderabbit` |
-
 For more information, see the [CodeRabbit CLI documentation](https://docs.coderabbit.ai/cli/overview).
+
+## Architecture
+
+```
+vim4rabbit/
+├── plugin/vim4rabbit.vim      # Plugin entry point, defines :Rabbit command
+├── autoload/vim4rabbit.vim    # UI/buffer operations (VimScript)
+└── pythonx/vim4rabbit/        # Python backend
+    ├── __init__.py            # Public API for VimScript
+    ├── cli.py                 # CodeRabbit CLI execution
+    ├── parser.py              # Review output parsing
+    ├── content.py             # UI content rendering
+    └── types.py               # Data types
+```
+
+## Development
+
+A Docker-based development environment is available:
+
+```bash
+# Build the development image
+./dev/build.sh
+
+# Run the development container
+./dev/run.sh
+```
+
+### Running Tests
+
+```bash
+python -m pytest tests/ -v
+```
 
 ## License
 
