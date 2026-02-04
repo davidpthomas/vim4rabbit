@@ -1,0 +1,121 @@
+  ¿ coderabbit
+
+  ¿¿  Error running coderabbit:
+
+    Starting CodeRabbit review in plain text mode...
+    
+    Connecting to review service
+    Setting up
+    Analyzing
+    Reviewing
+    
+    ============================================================================
+    File: autoload/vim4rabbit.vim
+    Line: 219 to 228
+    Type: potential_issue
+    
+    Comment:
+    Remove or conditionally enable debug logging before merging.
+    
+    This debug code writes to disk on every output callback, which:
+    1. Should not ship in production code without a toggle
+    2. Will fail if tmp/ directory doesn't exist (not auto-created)
+    3. Uses time-only timestamp (%H%M%S) causing file collisions across days
+    
+    If debugging is needed long-term, consider a g:vim4rabbit_debug flag to conditionally enable logging.
+    
+    
+    Proposed conditional approach
+    
+     function! s:OnReviewOutput(channel, msg)
+    -    " DEBUG: Write variable contents to file
+    -    let l:debug_file = './tmp/debug_' . strftime('%H%M%S') . '.txt'
+    -    let l:debug_lines = [
+    -        \ 'DEBUG OnReviewOutput:',
+    -        \ '  channel: ' . string(a:channel),
+    -        \ '  msg: ' . string(a:msg),
+    -        \ '  s:review_output count: ' . len(s:review_output),
+    -        \ ]
+    -    call writefile(l:debug_lines, l:debug_file, 'a')
+    -
+         call add(s:review_output, a:msg)
+     endfunction
+    
+    Prompt for AI Agent:
+    In @autoload/vim4rabbit.vim around lines 219 - 228, The debug write is unconditional and unsafe: guard the block with a user-configurable flag (e.g. g:vim4rabbit_debug) so the write only runs when enabled, remove it from production flow; ensure the target directory exists before calling writefile by creating it with mkdir(..., 'p') (use the same directory variable as l:debug_file), and make the filename collision-resistant by including the full date/time (not just '%H%M%S') or a PID/unique suffix; specifically update the block that builds l:debug_file / l:debug_lines and the writefile call so it checks g:vim4rabbit_debug, ensures the directory exists, and writes to a uniquely named file referencing l:debug_file, writefile, and s:review_output.
+    
+    
+    
+    ============================================================================
+    File: autoload/vim4rabbit.vim
+    Line: 234 to 243
+    Type: potential_issue
+    
+    Comment:
+    Same debug logging issue as above¿remove or make conditional.
+    
+    This duplicates the debug logging concern. Both s:OnReviewOutput and s:OnReviewExit have debug code that should be removed for production.
+    
+    
+    Proposed fix
+    
+     function! s:OnReviewExit(job, exit_status)
+    -    " DEBUG: Write variable contents to file
+    -    let l:debug_file = './tmp/debug_' . strftime('%H%M%S') . '.txt'
+    -    let l:debug_lines = [
+    -        \ 'DEBUG OnReviewExit:',
+    -        \ '  job: ' . string(a:job),
+    -        \ '  exit_status: ' . string(a:exit_status),
+    -        \ '  s:review_output: ' . string(s:review_output),
+    -        \ ]
+    -    call writefile(l:debug_lines, l:debug_file, 'a')
+    -
+         " Clear the job reference
+         let s:review_job = v:null
+    
+    Prompt for AI Agent:
+    In @autoload/vim4rabbit.vim around lines 234 - 243, Remove or guard the temporary debug file writes in s:OnReviewExit (the block that builds l:debug_file, l:debug_lines and calls writefile) so production doesn't emit duplicate debug logs; either delete that debug block entirely or wrap it in a debug flag check (e.g. if exists('g:vim4rabbit_debug') && g:vim4rabbit_debug) so the code only executes when the flag is enabled; mirror the same change already applied to s:OnReviewOutput to keep behavior consistent.
+    
+    
+    
+    ============================================================================
+    File: autoload/vim4rabbit.vim
+    Line: 256 to 265
+    Type: potential_issue
+    
+    Comment:
+    Both branches are identical, and success case passes False incorrectly.
+    
+    Lines 257 and 259 execute the same code regardless of exit_status, making the conditional meaningless. Additionally, when exit_status == 0 (success), passing False as the first argument appears incorrect¿it should likely be True.
+    
+    Either restore the parsing logic or fix the success flag:
+    
+    
+    Proposed fix if raw output display is intentional
+    
+         " Format output via Python
+         if a:exit_status != 0
+             let l:content = py3eval("vim4rabbit.vim_format_review(False, [], " . json_encode(l:output) . ")")
+         else
+    -        let l:content = py3eval("vim4rabbit.vim_format_review(False, [], " . json_encode(l:output) . ")")
+    -        "let l:result = py3eval("vim4rabbit.vim_parse_review_output(" . string(l:output) . ")")
+    -        "let l:content = py3eval('vim4rabbit.vim_format_review(' .
+    -        "    \ l:result.success . ', ' .
+    -        "    \ string(l:result.issues) . ', ' .
+    -        "    \ string(l:result.error_message) . ')')
+    +        let l:content = py3eval("vim4rabbit.vim_format_review(True, [], " . json_encode(l:output) . ")")
+         endif
+    
+    
+    
+    Also consider removing the commented-out code if it's no longer needed, or uncommenting it if proper parsing should be restored.
+    
+    Prompt for AI Agent:
+    In @autoload/vim4rabbit.vim around lines 256 - 265, The conditional around a:exit_status is buggy: both branches call vim4rabbit.vim_format_review with False and identical args, so restore correct success handling and either re-enable parsing or remove dead code; when exit_status == 0 pass True as the first argument to vim4rabbit.vim_format_review (use vim4rabbit.vim_parse_review_output to produce l:result and then call vim_format_review(l:result.success, l:result.issues, l:result.error_message) if you want structured output), or if you intend to always display raw output remove the commented parse code and change the success flag in the true branch to True and use l:output consistently for l:content.
+    
+    
+    
+    Review completed ¿
+    
+
+  Press [q] to close
