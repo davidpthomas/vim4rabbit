@@ -81,7 +81,7 @@ function! vim4rabbit#Help()
 
     " Map keybindings for help buffer
     nnoremap <buffer> <silent> q :call vim4rabbit#CloseHelp()<CR>
-    nnoremap <buffer> <silent> r :call vim4rabbit#Review()<CR>
+    nnoremap <buffer> <silent> ru :call vim4rabbit#Review()<CR>
 
     " Auto-resize on window resize
     augroup vim4rabbit_help_resize
@@ -201,7 +201,7 @@ function! vim4rabbit#RunReviewAsync()
     let s:review_output = []
 
     " Start the job
-    let l:cmd = ['coderabbit', '--plain']
+    let l:cmd = ['coderabbit', 'review', '--type', 'uncommitted']
     let s:review_job = job_start(l:cmd, {
         \ 'out_cb': function('s:OnReviewOutput'),
         \ 'err_cb': function('s:OnReviewOutput'),
