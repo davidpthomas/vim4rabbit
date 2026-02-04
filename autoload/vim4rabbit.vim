@@ -201,7 +201,7 @@ function! vim4rabbit#RunReviewAsync()
     let s:review_output = []
 
     " Start the job
-    let l:cmd = ['coderabbit', 'review', '--type', 'uncommitted']
+    let l:cmd = ['coderabbit', 'review', '--type', 'uncommitted', '--plain']
     let s:review_job = job_start(l:cmd, {
         \ 'out_cb': function('s:OnReviewOutput'),
         \ 'err_cb': function('s:OnReviewOutput'),
@@ -221,6 +221,7 @@ endfunction
 
 " Callback when job exits
 function! s:OnReviewExit(job, exit_status)
+
     " Clear the job reference
     let s:review_job = v:null
 
@@ -234,9 +235,9 @@ function! s:OnReviewExit(job, exit_status)
 
     " Format output via Python
     if a:exit_status != 0
-        let l:content = py3eval("vim4rabbit.vim_format_review(False, [], ' . string(l:output) . ')")
+        let l:content = py3eval("vim4rabbit.vim_format_review(False, [], " . json_encode(l:output) . ")")
     else
-        let l:result = py3eval("vim4rabbit.vim_parse_review_output(' . string(l:output) . ')")
+        let l:result = py3eval("vim4rabbit.vim_parse_review_output(" . json_encode(l:output) . ")")
         let l:content = py3eval('vim4rabbit.vim_format_review(' .
             \ l:result.success . ', ' .
             \ string(l:result.issues) . ', ' .
