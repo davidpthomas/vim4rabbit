@@ -97,6 +97,34 @@ For more information, see the [CodeRabbit CLI documentation](https://docs.codera
 
 ## Architecture
 
+```mermaid
+flowchart TB
+    subgraph Vim["Vim Editor"]
+        User([User]) -->|":Rabbit review"| Plugin["plugin/vim4rabbit.vim<br/><i>Entry Point</i>"]
+        Plugin --> Autoload["autoload/vim4rabbit.vim<br/><i>UI/Buffer Operations</i>"]
+        Autoload -->|"py3eval()"| API
+    end
+
+    subgraph Python["Python Backend (pythonx/vim4rabbit/)"]
+        API["__init__.py<br/><i>Public API</i>"]
+        API --> CLI["cli.py<br/><i>CLI Execution</i>"]
+        API --> Content["content.py<br/><i>UI Rendering</i>"]
+        API --> Parser["parser.py<br/><i>Output Parsing</i>"]
+        CLI --> Types["types.py<br/><i>Data Types</i>"]
+        Parser --> Types
+    end
+
+    subgraph External["External"]
+        CLI -->|"async job"| CR["CodeRabbit CLI"]
+        CR -->|"review output"| Parser
+    end
+
+    Content -->|"formatted lines"| Autoload
+    Autoload -->|"Help/Review Panel"| User
+```
+
+### File Structure
+
 ```
 vim4rabbit/
 ├── plugin/vim4rabbit.vim      # Plugin entry point, defines :Rabbit command
