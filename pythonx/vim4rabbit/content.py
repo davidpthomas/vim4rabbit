@@ -12,7 +12,7 @@ from .types import ReviewResult
 # Help content configuration
 HELP_COMMANDS: List[List[Tuple[str, str]]] = [
     # Column 1
-    [("r", "Review")],
+    [("ru", "Review Uncommitted")],
     # Column 2
     [],
     # Column 3
