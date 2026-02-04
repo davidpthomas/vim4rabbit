@@ -20,11 +20,13 @@ class TestRenderHelp:
         assert "vim4rabbit Help" in content[0]
 
     def test_contains_review_command(self):
-        """Test that help contains review command."""
+        """Test that help contains review commands."""
         content = render_help(80)
         # Join all lines to search
         full_text = "\n".join(content)
-        assert "[r] Review" in full_text
+        assert "[ru] Review Uncommitted" in full_text
+        assert "[rs] Review Staged" in full_text
+        assert "[rc] Review Committed" in full_text
 
     def test_contains_quit_command(self):
         """Test that help contains quit command."""

@@ -68,17 +68,36 @@ def vim_format_review(
 
     Args:
         success: Whether review succeeded
-        issues: List of issues (each issue is list of line strings)
+        issues: List of issue dicts with keys: lines, location, summary
         error_message: Error message if failed
 
     Returns:
         List of strings (lines) for the review buffer
     """
-    from .types import ReviewIssue, ReviewResult
+    from .types import FileLocation, ReviewIssue, ReviewResult
+
+    parsed_issues = []
+    for issue in issues:
+        if isinstance(issue, dict):
+            location = None
+            if issue.get("location"):
+                loc = issue["location"]
+                location = FileLocation(
+                    filepath=loc["filepath"],
+                    line=loc.get("line"),
+                )
+            parsed_issues.append(ReviewIssue(
+                lines=issue.get("lines", []),
+                location=location,
+                summary=issue.get("summary", ""),
+            ))
+        else:
+            # Backward compatibility: plain list of lines
+            parsed_issues.append(ReviewIssue(lines=issue))
 
     result = ReviewResult(
         success=success,
-        issues=[ReviewIssue(lines=issue) for issue in issues],
+        issues=parsed_issues,
         error_message=error_message,
     )
 
@@ -148,6 +167,37 @@ def vim_parse_review_output(output: str) -> dict:
         raw_output=output,
     )
     return result.to_dict()
+
+
+def vim_get_quickfix_list(issues: list) -> List[dict]:
+    """
+    Convert issues to quickfix list format.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_get_quickfix_list(' . issues . ')')
+
+    Args:
+        issues: List of issue dicts from vim_parse_review_output
+
+    Returns:
+        List of dicts suitable for Vim's setqflist()
+    """
+    from .types import FileLocation
+
+    qflist = []
+    for i, issue in enumerate(issues, 1):
+        if not isinstance(issue, dict):
+            continue
+
+        location = issue.get("location")
+        if location and location.get("filepath"):
+            qflist.append({
+                "filename": location["filepath"],
+                "lnum": location.get("line", 1) or 1,
+                "text": issue.get("summary", f"Issue #{i}"),
+                "type": "W",  # Warning type
+            })
+
+    return qflist
 
 
 # =============================================================================

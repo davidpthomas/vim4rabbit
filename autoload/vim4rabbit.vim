@@ -12,6 +12,15 @@ let s:review_bufnr = -1
 let s:review_job = v:null
 let s:review_output = []
 
+" Store review type for current run
+let s:review_type = 'uncommitted'
+
+" Store parsed issues for navigation
+let s:review_issues = []
+
+" Store line ranges for each issue in the buffer (list of [start, end] pairs)
+let s:issue_line_ranges = []
+
 " Animation state
 let s:spinner_timer = v:null
 let s:spinner_frame = 0
@@ -29,15 +38,26 @@ function! vim4rabbit#Rabbit(subcmd)
     if l:cmd ==# 'help'
         call vim4rabbit#Help()
     elseif l:cmd ==# 'review'
-        call vim4rabbit#Review()
+        call vim4rabbit#Review('uncommitted')
+    elseif l:cmd ==# 'review uncommitted'
+        call vim4rabbit#Review('uncommitted')
+    elseif l:cmd ==# 'review staged'
+        call vim4rabbit#Review('staged')
+    elseif l:cmd ==# 'review committed'
+        call vim4rabbit#Review('committed')
     else
         echo "Unknown rabbit command: " . l:cmd
-        echo "Available commands: help, review"
+        echo "Available commands: help, review, review uncommitted, review staged, review committed"
     endif
 endfunction
 
 " Command completion for :Rabbit
 function! vim4rabbit#CompleteRabbit(ArgLead, CmdLine, CursorPos)
+    " Check if we're completing after 'review'
+    if a:CmdLine =~# 'Rabbit review\s*$' || a:CmdLine =~# 'Rabbit review \w*$'
+        let l:review_types = ['uncommitted', 'staged', 'committed']
+        return filter(l:review_types, 'v:val =~ "^" . a:ArgLead')
+    endif
     let l:commands = ['help', 'review']
     return filter(l:commands, 'v:val =~ "^" . a:ArgLead')
 endfunction
@@ -86,7 +106,9 @@ function! vim4rabbit#Help()
 
     " Map keybindings for help buffer
     nnoremap <buffer> <silent> q :call vim4rabbit#CloseHelp()<CR>
-    nnoremap <buffer> <silent> ru :call vim4rabbit#CloseHelp() \| call vim4rabbit#Review()<CR>
+    nnoremap <buffer> <silent> ru :call vim4rabbit#CloseHelp() \| call vim4rabbit#Review('uncommitted')<CR>
+    nnoremap <buffer> <silent> rs :call vim4rabbit#CloseHelp() \| call vim4rabbit#Review('staged')<CR>
+    nnoremap <buffer> <silent> rc :call vim4rabbit#CloseHelp() \| call vim4rabbit#Review('committed')<CR>
 
     " Auto-resize on window resize
     augroup vim4rabbit_help_resize
@@ -152,7 +174,10 @@ function! vim4rabbit#CleanupHelp()
 endfunction
 
 " Open the review buffer on the right side of the screen
-function! vim4rabbit#Review()
+function! vim4rabbit#Review(review_type)
+    " Store the review type
+    let s:review_type = a:review_type
+
     " If review buffer already exists, just focus it
     if s:review_bufnr != -1 && bufexists(s:review_bufnr)
         let l:winnr = bufwinnr(s:review_bufnr)
@@ -210,8 +235,8 @@ function! vim4rabbit#RunReviewAsync()
     call s:UpdateSpinner(0)
     let s:spinner_timer = timer_start(750, function('s:UpdateSpinner'), {'repeat': -1})
 
-    " Start the job
-    let l:cmd = ['coderabbit', 'review', '--type', 'uncommitted', '--plain']
+    " Start the job with appropriate review type
+    let l:cmd = ['coderabbit', 'review', '--type', s:review_type, '--plain']
     let s:review_job = job_start(l:cmd, {
         \ 'out_cb': function('s:OnReviewOutput'),
         \ 'err_cb': function('s:OnReviewOutput'),
@@ -281,11 +306,13 @@ function! s:OnReviewExit(job, exit_status)
     " Combine output
     let l:output = join(s:review_output, '')
 
-    " Format output via Python
+    " Format output via Python and store issues
     if a:exit_status != 0
+        let s:review_issues = []
         let l:content = py3eval("vim4rabbit.vim_format_review(False, [], " . json_encode(l:output) . ")")
     else
         let l:result = py3eval("vim4rabbit.vim_parse_review_output(" . json_encode(l:output) . ")")
+        let s:review_issues = l:result.issues
         let l:content = py3eval('vim4rabbit.vim_format_review(' .
             \ l:result.success . ', ' .
             \ string(l:result.issues) . ', ' .
@@ -294,6 +321,11 @@ function! s:OnReviewExit(job, exit_status)
 
     " Update buffer content
     call s:UpdateReviewBuffer(l:content)
+
+    " Add keybindings for navigation if we have issues
+    if len(s:review_issues) > 0
+        call s:SetupReviewKeybindings()
+    endif
 endfunction
 
 " Cancel the running review and close buffer
@@ -373,4 +405,118 @@ function! vim4rabbit#CleanupReview()
     endif
     let s:review_job = v:null
     let s:review_bufnr = -1
+    let s:review_issues = []
+endfunction
+
+" Set up keybindings for review buffer navigation
+function! s:SetupReviewKeybindings()
+    if s:review_bufnr == -1 || !bufexists(s:review_bufnr)
+        return
+    endif
+
+    let l:winnr = bufwinnr(s:review_bufnr)
+    if l:winnr == -1
+        return
+    endif
+
+    let l:cur_winnr = winnr()
+    execute l:winnr . 'wincmd w'
+
+    " Map Enter to jump to issue location
+    nnoremap <buffer> <silent> <CR> :call vim4rabbit#JumpToIssue()<CR>
+    " Map 'Q' to load issues into quickfix
+    nnoremap <buffer> <silent> Q :call vim4rabbit#LoadQuickfix()<CR>
+
+    execute l:cur_winnr . 'wincmd w'
+endfunction
+
+" Find the issue number based on cursor position
+function! s:GetCurrentIssueNumber()
+    let l:current_line = line('.')
+
+    " Search backward for "Issue #N" pattern
+    let l:pos = getpos('.')
+    normal! 0
+    let l:found = search('^\s*Issue #\(\d\+\)', 'bcnW')
+
+    if l:found > 0
+        let l:line_text = getline(l:found)
+        let l:match = matchlist(l:line_text, 'Issue #\(\d\+\)')
+        if len(l:match) > 1
+            return str2nr(l:match[1])
+        endif
+    endif
+
+    return 0
+endfunction
+
+" Jump to the file:line of the current issue
+function! vim4rabbit#JumpToIssue()
+    let l:issue_num = s:GetCurrentIssueNumber()
+
+    if l:issue_num == 0 || l:issue_num > len(s:review_issues)
+        echo "No issue under cursor"
+        return
+    endif
+
+    " Get the issue (1-indexed)
+    let l:issue = s:review_issues[l:issue_num - 1]
+    let l:location = get(l:issue, 'location', v:null)
+
+    if l:location == v:null || get(l:location, 'filepath', '') ==# ''
+        echo "No file location for this issue"
+        return
+    endif
+
+    let l:filepath = l:location.filepath
+    let l:line = get(l:location, 'line', 1)
+    if l:line == v:null
+        let l:line = 1
+    endif
+
+    " Find the original window (not help or review)
+    let l:target_winnr = -1
+    for l:winnr in range(1, winnr('$'))
+        let l:bufnr = winbufnr(l:winnr)
+        if l:bufnr != s:review_bufnr && l:bufnr != s:help_bufnr
+            let l:target_winnr = l:winnr
+            break
+        endif
+    endfor
+
+    if l:target_winnr == -1
+        " No suitable window, create one
+        execute 'wincmd h'
+        execute 'edit ' . fnameescape(l:filepath)
+    else
+        execute l:target_winnr . 'wincmd w'
+        execute 'edit ' . fnameescape(l:filepath)
+    endif
+
+    " Jump to line
+    execute l:line
+    normal! zz
+endfunction
+
+" Load issues into quickfix list
+function! vim4rabbit#LoadQuickfix()
+    if len(s:review_issues) == 0
+        echo "No issues to load"
+        return
+    endif
+
+    " Get quickfix list from Python
+    let l:qflist = py3eval('vim4rabbit.vim_get_quickfix_list(' . string(s:review_issues) . ')')
+
+    if len(l:qflist) == 0
+        echo "No issues with file locations"
+        return
+    endif
+
+    " Set quickfix list
+    call setqflist(l:qflist)
+    echo "Loaded " . len(l:qflist) . " issue(s) into quickfix"
+
+    " Open quickfix window
+    copen
 endfunction
