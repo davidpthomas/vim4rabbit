@@ -7,11 +7,19 @@
 * Claude + Jira Authentication (local laptop, not docker dev container)
 > Atlassian.com > Profile > Security > API Tokens >
 >> # Install official Atlassian Rovo MCP servier with Claude CLI
+
+# approach #1 (works best)
+claude mcp add --transport sse atlassian https://mcp.atlassian.com/v1/sse -s user
+claude:  /mcp | atlassian | authenticate/connect
+
+# approach #2 (alternate / iffy)
 claude mcp add rovodev-cli -- npx -y @jaggerxtrm/rovodev-mcp-tool
 claude mcp list  # test
 brew install jira-cli
 export JIRA_API_TOKEN # .bash_profile
 jira init
+
+
 
 Python/Testing
 * dev: cd /app && pytest . -v
