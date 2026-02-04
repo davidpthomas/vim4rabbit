@@ -10,7 +10,13 @@ __version__ = "0.1.0"
 from typing import List
 
 from .cli import run_review
-from .content import format_cancelled_message, format_loading_message, format_review_output, render_help
+from .content import (
+    format_cancelled_message,
+    format_loading_message,
+    format_review_output,
+    get_animation_frame,
+    render_help,
+)
 from .parser import parse_review_issues
 
 
@@ -101,6 +107,21 @@ def vim_get_cancelled_content() -> List[str]:
         List of strings for cancelled state
     """
     return format_cancelled_message()
+
+
+def vim_get_animation_frame(frame: int) -> List[str]:
+    """
+    Get a specific animation frame for the loading spinner.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_get_animation_frame(' . frame . ')')
+
+    Args:
+        frame: Frame number (0-23, wraps around)
+
+    Returns:
+        List of strings for the animation frame
+    """
+    return get_animation_frame(frame)
 
 
 def vim_parse_review_output(output: str) -> dict:

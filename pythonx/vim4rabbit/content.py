@@ -9,6 +9,185 @@ from typing import List, Tuple
 from .types import ReviewResult
 
 
+# Animation frames for rabbit eating vegetables (24 frames total)
+# Vegetables: carrot 🥕, cabbage 🥬, broccoli 🥦, bell pepper 🫑
+ANIMATION_FRAMES: List[List[str]] = [
+    # Frame 0: Full plate
+    [
+        r"    (\__/)",
+        r"    (='.'=)    🥕🥬🥦🫑",
+        r'    (")_(")',
+    ],
+    # Frame 1: Excited to eat
+    [
+        r"    (\__/)",
+        r"    (=°o°=)   🥕🥬🥦🫑  *crunch*",
+        r'    (")_(")',
+    ],
+    # Frame 2: Chewing
+    [
+        r"    (\__/)",
+        r"    (=^.^=)    🥕🥬🥦",
+        r'    (")_(")',
+    ],
+    # Frame 3: More munching
+    [
+        r"    (\__/)",
+        r"    (=°o°=)   🥕🥬🥦  *munch*",
+        r'    (")_(")',
+    ],
+    # Frame 4: Happy chewing
+    [
+        r"    (\__/)",
+        r"    (=~.~=)    🥕🥬🥦",
+        r'    (")_(")',
+    ],
+    # Frame 5: Another bite
+    [
+        r"    (\__/)",
+        r"    (=°o°=)   🥕🥬  *chomp*",
+        r'    (")_(")',
+    ],
+    # Frame 6: Enjoying
+    [
+        r"    (\__/)",
+        r"    (=^.^=)    🥕🥬🫑",
+        r'    (")_(")',
+    ],
+    # Frame 7: Crunch
+    [
+        r"    (\__/)",
+        r"    (=°o°=)   🥕🥬🫑  *crunch*",
+        r'    (")_(")',
+    ],
+    # Frame 8: Satisfied
+    [
+        r"    (\__/)",
+        r"    (=~.~=)    🥕🥬",
+        r'    (")_(")',
+    ],
+    # Frame 9: More food
+    [
+        r"    (\__/)",
+        r"    (='.'=)    🥦🫑🥕",
+        r'    (")_(")',
+    ],
+    # Frame 10: Big bite
+    [
+        r"    (\__/)",
+        r"    (=°o°=)   🥦🫑🥕  *munch*",
+        r'    (")_(")',
+    ],
+    # Frame 11: Chewing happily
+    [
+        r"    (\__/)",
+        r"    (=^.^=)    🥦🫑",
+        r'    (")_(")',
+    ],
+    # Frame 12: Yum
+    [
+        r"    (\__/)",
+        r"    (=~.~=)    🥬🥦🫑🥕",
+        r'    (")_(")',
+    ],
+    # Frame 13: Chomp
+    [
+        r"    (\__/)",
+        r"    (=°o°=)   🥬🥦🫑  *chomp*",
+        r'    (")_(")',
+    ],
+    # Frame 14: Happy
+    [
+        r"    (\__/)",
+        r"    (=^.^=)    🥬🥦",
+        r'    (")_(")',
+    ],
+    # Frame 15: Munching
+    [
+        r"    (\__/)",
+        r"    (=°o°=)   🥬🥦  *crunch*",
+        r'    (")_(")',
+    ],
+    # Frame 16: Content
+    [
+        r"    (\__/)",
+        r"    (=~.~=)    🥕🫑",
+        r'    (")_(")',
+    ],
+    # Frame 17: Another bite
+    [
+        r"    (\__/)",
+        r"    (=°o°=)   🥕🫑  *munch*",
+        r'    (")_(")',
+    ],
+    # Frame 18: Almost done
+    [
+        r"    (\__/)",
+        r"    (=^.^=)    🥕🥬🥦",
+        r'    (")_(")',
+    ],
+    # Frame 19: Chomp
+    [
+        r"    (\__/)",
+        r"    (=°o°=)   🥬🥦  *chomp*",
+        r'    (")_(")',
+    ],
+    # Frame 20: Few left
+    [
+        r"    (\__/)",
+        r"    (=^.^=)    🥕🫑",
+        r'    (")_(")',
+    ],
+    # Frame 21: Last bites
+    [
+        r"    (\__/)",
+        r"    (=°o°=)   🥕  *crunch*",
+        r'    (")_(")',
+    ],
+    # Frame 22: One more
+    [
+        r"    (\__/)",
+        r"    (=^.^=)    🫑",
+        r'    (")_(")',
+    ],
+    # Frame 23: All done - satisfied!
+    [
+        r"    (\__/)",
+        r"    (=~.~=)      *yum!*",
+        r'    (")_(")',
+    ],
+]
+
+
+def get_animation_frame(frame_number: int) -> List[str]:
+    """
+    Get a complete animation frame for the loading state.
+
+    Args:
+        frame_number: The frame index (0-23, wraps around)
+
+    Returns:
+        List of strings for the complete frame including header and footer
+    """
+    frame_index = frame_number % len(ANIMATION_FRAMES)
+    rabbit_lines = ANIMATION_FRAMES[frame_index]
+
+    content: List[str] = [
+        "  \U0001F430 coderabbit",  # rabbit emoji header
+        "",
+        "  Coderabbit review in progress!",
+        "",
+        "  This may take 30-90+ sec depending on the size of the review.",
+        "  Your results will be displayed shortly...",
+        "",
+    ]
+    content.extend(rabbit_lines)
+    content.append("")
+    content.append("  Press [c] to cancel")
+
+    return content
+
+
 # Help content configuration
 HELP_COMMANDS: List[List[Tuple[str, str]]] = [
     # Column 1
