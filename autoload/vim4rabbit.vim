@@ -12,10 +12,10 @@ let s:review_bufnr = -1
 let s:review_job = v:null
 let s:review_output = []
 
-" Spinner state
+" Animation state
 let s:spinner_timer = v:null
 let s:spinner_frame = 0
-let s:spinner_frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+let s:animation_frame_count = 24
 
 " Main Rabbit command dispatcher
 function! vim4rabbit#Rabbit(subcmd)
@@ -205,10 +205,10 @@ function! vim4rabbit#RunReviewAsync()
     " Reset output collector
     let s:review_output = []
 
-    " Start the spinner
+    " Start the animation
     let s:spinner_frame = 0
     call s:UpdateSpinner(0)
-    let s:spinner_timer = timer_start(100, function('s:UpdateSpinner'), {'repeat': -1})
+    let s:spinner_timer = timer_start(750, function('s:UpdateSpinner'), {'repeat': -1})
 
     " Start the job
     let l:cmd = ['coderabbit', 'review', '--type', 'uncommitted', '--plain']
@@ -225,7 +225,7 @@ function! vim4rabbit#RunReviewAsync()
     endif
 endfunction
 
-" Update the spinner animation in the review buffer
+" Update the animation in the review buffer
 function! s:UpdateSpinner(timer)
     if s:review_bufnr == -1 || !bufexists(s:review_bufnr)
         call s:StopSpinner()
@@ -237,18 +237,9 @@ function! s:UpdateSpinner(timer)
         return
     endif
 
-    " Get current spinner frame
-    let l:frame = s:spinner_frames[s:spinner_frame]
-    let s:spinner_frame = (s:spinner_frame + 1) % len(s:spinner_frames)
-
-    " Build loading content with spinner
-    let l:content = [
-        \ "  \U0001F430 coderabbit",
-        \ "",
-        \ "  " . l:frame . " Running coderabbit...",
-        \ "",
-        \ "  Press [c] to cancel",
-        \ ]
+    " Get current animation frame from Python
+    let l:content = py3eval('vim4rabbit.vim_get_animation_frame(' . s:spinner_frame . ')')
+    let s:spinner_frame = (s:spinner_frame + 1) % s:animation_frame_count
 
     " Update buffer
     let l:cur_winnr = winnr()
