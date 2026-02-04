@@ -97,6 +97,82 @@ For more information, see the [CodeRabbit CLI documentation](https://docs.codera
 
 ## Architecture
 
+vim4rabbit uses a layered architecture separating UI (VimScript) from business logic (Python):
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         Vim Editor                              │
+│  :Rabbit review  :Rabbit help                                   │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  VimScript UI Layer                             │
+│  plugin/vim4rabbit.vim     Entry point, :Rabbit command         │
+│  autoload/vim4rabbit.vim   Buffer management, async jobs,       │
+│                            keybindings, animation timer         │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ py3eval()
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  Python Backend                                 │
+│  pythonx/vim4rabbit/                                            │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌───────────┐  │
+│  │ __init__.py │ │   cli.py    │ │  parser.py  │ │ content.py│  │
+│  │ Public API  │ │ CLI runner  │ │ Output      │ │ Formatting│  │
+│  │ for Vim     │ │             │ │ parsing     │ │ & render  │  │
+│  └─────────────┘ └──────┬──────┘ └─────────────┘ └───────────┘  │
+│                         │                                       │
+│  types.py: ReviewIssue, ReviewResult data structures            │
+└─────────────────────────┼───────────────────────────────────────┘
+                          │ subprocess
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  CodeRabbit CLI                                 │
+│  coderabbit review --type uncommitted --plain                   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Data Flow: `:Rabbit review`
+
+```
+User runs :Rabbit review
+        │
+        ▼
+┌───────────────────┐     ┌───────────────────┐
+│ Create review     │     │ Start async job   │
+│ buffer (vsplit)   │────▶│ + animation timer │
+└───────────────────┘     └─────────┬─────────┘
+                                    │
+                    ┌───────────────┼───────────────┐
+                    │               │               │
+                    ▼               ▼               ▼
+             ┌───────────┐  ┌───────────┐   ┌───────────┐
+             │ Animation │  │ Accumulate│   │ Job exit  │
+             │ updates   │  │ output    │   │ callback  │
+             │ (750ms)   │  │           │   │           │
+             └───────────┘  └───────────┘   └─────┬─────┘
+                                                  │
+                                    ┌─────────────┴─────────────┐
+                                    │                           │
+                                    ▼                           ▼
+                             ┌───────────┐               ┌───────────┐
+                             │ Success:  │               │ Error:    │
+                             │ Parse &   │               │ Format    │
+                             │ format    │               │ error msg │
+                             └─────┬─────┘               └─────┬─────┘
+                                   │                           │
+                                   └─────────────┬─────────────┘
+                                                 │
+                                                 ▼
+                                   ┌───────────────────────┐
+                                   │ Display results in    │
+                                   │ review buffer         │
+                                   └───────────────────────┘
+```
+
+### File Structure
+
 ```
 vim4rabbit/
 ├── plugin/vim4rabbit.vim      # Plugin entry point, defines :Rabbit command
