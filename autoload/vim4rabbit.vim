@@ -12,6 +12,11 @@ let s:review_bufnr = -1
 let s:review_job = v:null
 let s:review_output = []
 
+" Spinner state
+let s:spinner_timer = v:null
+let s:spinner_frame = 0
+let s:spinner_frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+
 " Main Rabbit command dispatcher
 function! vim4rabbit#Rabbit(subcmd)
     let l:cmd = a:subcmd
@@ -200,6 +205,11 @@ function! vim4rabbit#RunReviewAsync()
     " Reset output collector
     let s:review_output = []
 
+    " Start the spinner
+    let s:spinner_frame = 0
+    call s:UpdateSpinner(0)
+    let s:spinner_timer = timer_start(100, function('s:UpdateSpinner'), {'repeat': -1})
+
     " Start the job
     let l:cmd = ['coderabbit', 'review', '--type', 'uncommitted', '--plain']
     let s:review_job = job_start(l:cmd, {
@@ -210,7 +220,52 @@ function! vim4rabbit#RunReviewAsync()
         \ })
 
     if job_status(s:review_job) ==# 'fail'
+        call s:StopSpinner()
         call s:DisplayReviewError('Failed to start coderabbit')
+    endif
+endfunction
+
+" Update the spinner animation in the review buffer
+function! s:UpdateSpinner(timer)
+    if s:review_bufnr == -1 || !bufexists(s:review_bufnr)
+        call s:StopSpinner()
+        return
+    endif
+
+    let l:winnr = bufwinnr(s:review_bufnr)
+    if l:winnr == -1
+        return
+    endif
+
+    " Get current spinner frame
+    let l:frame = s:spinner_frames[s:spinner_frame]
+    let s:spinner_frame = (s:spinner_frame + 1) % len(s:spinner_frames)
+
+    " Build loading content with spinner
+    let l:content = [
+        \ "  \U0001F430 coderabbit",
+        \ "",
+        \ "  " . l:frame . " Running coderabbit...",
+        \ "",
+        \ "  Press [c] to cancel",
+        \ ]
+
+    " Update buffer
+    let l:cur_winnr = winnr()
+    execute l:winnr . 'wincmd w'
+    setlocal modifiable
+    silent! %delete _
+    call setline(1, l:content)
+    setlocal nomodifiable
+    execute l:cur_winnr . 'wincmd w'
+    redraw
+endfunction
+
+" Stop the spinner timer
+function! s:StopSpinner()
+    if s:spinner_timer != v:null
+        call timer_stop(s:spinner_timer)
+        let s:spinner_timer = v:null
     endif
 endfunction
 
@@ -221,6 +276,8 @@ endfunction
 
 " Callback when job exits
 function! s:OnReviewExit(job, exit_status)
+    " Stop the spinner
+    call s:StopSpinner()
 
     " Clear the job reference
     let s:review_job = v:null
@@ -250,6 +307,9 @@ endfunction
 
 " Cancel the running review and close buffer
 function! vim4rabbit#CancelReview()
+    " Stop the spinner
+    call s:StopSpinner()
+
     if s:review_job != v:null && job_status(s:review_job) ==# 'run'
         call job_stop(s:review_job, 'kill')
         let s:review_job = v:null
@@ -297,6 +357,9 @@ endfunction
 
 " Close the review buffer
 function! vim4rabbit#CloseReview()
+    " Stop the spinner
+    call s:StopSpinner()
+
     " Cancel any running job first
     if s:review_job != v:null && job_status(s:review_job) ==# 'run'
         call job_stop(s:review_job, 'kill')
@@ -310,6 +373,9 @@ endfunction
 
 " Clean up when review buffer is closed
 function! vim4rabbit#CleanupReview()
+    " Stop the spinner
+    call s:StopSpinner()
+
     " Cancel any running job
     if s:review_job != v:null && job_status(s:review_job) ==# 'run'
         call job_stop(s:review_job, 'kill')
