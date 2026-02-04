@@ -23,3 +23,6 @@ jira init
 
 Python/Testing
 * dev: cd /app && pytest . -v
+
+python -m pytest tests/ -v
+
