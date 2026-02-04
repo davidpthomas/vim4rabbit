@@ -33,7 +33,7 @@ git clone https://github.com/davidpthomas/vim4rabbit.git ~/.vim/bundle/vim4rabbi
 
 | Command | Description |
 |---------|-------------|
-| `:CR`   | Open the CodeRabbit buffer |
+| `:Rabbit`   | Open the CodeRabbit buffer |
 
 ## Requirements
 
