@@ -1,6 +1,6 @@
 # vim4rabbit
 
-A dedicated Vim plugin for running CodeRabbit code reviews directly in Vim and leveraging Claude Code to implement the fixes.  All without using a mouse.
+A Vim plugin for Software Engineers using CodeRabbit to do code reviews and leveraging Claude Code to implement the fixes.  All without using a mouse.
 
 ## Features
 
