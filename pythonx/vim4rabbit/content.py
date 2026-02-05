@@ -9,6 +9,21 @@ from typing import List, Tuple
 from .types import ReviewResult
 
 
+def format_elapsed_time(seconds: int) -> str:
+    """
+    Format elapsed seconds as 'XXmin YYsec'.
+
+    Args:
+        seconds: Total elapsed seconds
+
+    Returns:
+        Formatted string like '03min 41sec'
+    """
+    minutes = seconds // 60
+    secs = seconds % 60
+    return f"{minutes:02d}min {secs:02d}sec"
+
+
 # Animation frames for rabbit eating vegetables (24 frames total)
 # Vegetables: carrot 🥕, cabbage 🥬, broccoli 🥦, bell pepper 🫑
 ANIMATION_FRAMES: List[List[str]] = [
@@ -159,12 +174,13 @@ ANIMATION_FRAMES: List[List[str]] = [
 ]
 
 
-def get_animation_frame(frame_number: int) -> List[str]:
+def get_animation_frame(frame_number: int, elapsed_secs: int = 0) -> List[str]:
     """
     Get a complete animation frame for the loading state.
 
     Args:
         frame_number: The frame index (0-23, wraps around)
+        elapsed_secs: Elapsed seconds since review started
 
     Returns:
         List of strings for the complete frame including header and footer
@@ -172,10 +188,12 @@ def get_animation_frame(frame_number: int) -> List[str]:
     frame_index = frame_number % len(ANIMATION_FRAMES)
     rabbit_lines = ANIMATION_FRAMES[frame_index]
 
+    elapsed_str = format_elapsed_time(elapsed_secs)
+
     content: List[str] = [
         "  \U0001F430 coderabbit",  # rabbit emoji header
         "",
-        "  Review in progress!",
+        f"  Review in progress!  {elapsed_str}",
         "",
         "  This may take a few minutes depending on the size of the review.",
         "  Your results will be displayed shortly...",
@@ -228,7 +246,7 @@ def render_help(width: int) -> List[str]:
     return content
 
 
-def format_review_output(result: ReviewResult) -> List[str]:
+def format_review_output(result: ReviewResult, elapsed_secs: int = 0) -> List[str]:
     """
     Format review output for display in buffer with vim folds and checkboxes.
 
@@ -237,9 +255,11 @@ def format_review_output(result: ReviewResult) -> List[str]:
     - Vim fold markers ({{{ and }}})
     - Checkbox prefixes [ ] for issue selection
     - Filtered preamble (content before first issue)
+    - Elapsed time display
 
     Args:
         result: ReviewResult from running CodeRabbit
+        elapsed_secs: Total elapsed seconds for the review command
 
     Returns:
         List of strings (lines) for the review buffer
@@ -259,7 +279,10 @@ def format_review_output(result: ReviewResult) -> List[str]:
         if not result.issues:
             content.append("  \u2713 No issues found!")  # checkmark
         else:
-            content.append(f"  Found {len(result.issues)} issue(s):")
+            elapsed_str = format_elapsed_time(elapsed_secs)
+            content.append(
+                f"  Found {len(result.issues)} issue(s):  {elapsed_str}"
+            )
             content.append("")
 
             for i, issue in enumerate(result.issues, 1):
