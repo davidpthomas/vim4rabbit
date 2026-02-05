@@ -12,6 +12,9 @@ let s:review_bufnr = -1
 let s:review_job = v:null
 let s:review_output = []
 
+" Store issue count for selection functions
+let s:review_issue_count = 0
+
 " Animation state
 let s:spinner_timer = v:null
 let s:spinner_frame = 0
@@ -210,6 +213,16 @@ function! vim4rabbit#Review(...)
     nnoremap <buffer> <silent> q :call vim4rabbit#CloseReview()<CR>
     nnoremap <buffer> <silent> c :call vim4rabbit#CancelReview()<CR>
 
+    " Fold navigation
+    nnoremap <buffer> <silent> <CR> za
+    nnoremap <buffer> <silent> zM zM
+    nnoremap <buffer> <silent> zR zR
+
+    " Selection
+    nnoremap <buffer> <silent> <Space> :call vim4rabbit#ToggleIssueSelection()<CR>
+    nnoremap <buffer> <silent> <leader>a :call vim4rabbit#SelectAllIssues()<CR>
+    nnoremap <buffer> <silent> <leader>n :call vim4rabbit#DeselectAllIssues()<CR>
+
     " Clean up when buffer is wiped
     autocmd BufWipeout <buffer> call vim4rabbit#CleanupReview()
 
@@ -400,6 +413,24 @@ function! s:UpdateReviewBuffer(content)
     " Move cursor to top
     normal! gg
 
+    " Set up folding for review results
+    setlocal foldmethod=marker
+    setlocal foldmarker={{{,}}}
+    setlocal foldlevel=0
+    setlocal foldtext=vim4rabbit#FoldText()
+    setlocal foldenable
+
+    " Initialize selection tracking
+    let b:vim4rabbit_selections = {}
+
+    " Count issues for selection functions
+    let s:review_issue_count = 0
+    for l:line in a:content
+        if l:line =~# '^\s*\[ \] \d\+\.'
+            let s:review_issue_count += 1
+        endif
+    endfor
+
     " Remove cancel mapping since job is done
     silent! nunmap <buffer> c
 
@@ -446,4 +477,159 @@ function! vim4rabbit#CleanupReview()
     endif
     let s:review_job = v:null
     let s:review_bufnr = -1
+    let s:review_issue_count = 0
+endfunction
+
+" Custom fold text for review issues
+function! vim4rabbit#FoldText()
+    let l:line = getline(v:foldstart)
+    let l:numlines = v:foldend - v:foldstart + 1
+    " Remove the fold marker from display
+    let l:line = substitute(l:line, '\s*{{{$', '', '')
+    return l:line . ' (' . l:numlines . ' lines)'
+endfunction
+
+" Get the issue number at the current cursor position
+function! vim4rabbit#GetIssueAtCursor()
+    let l:lnum = line('.')
+    let l:line = getline(l:lnum)
+
+    " Check if we're on a fold header line (has checkbox pattern)
+    let l:match = matchlist(l:line, '^\s*\[\(.\)\]\s*\(\d\+\)\.')
+    if !empty(l:match)
+        return str2nr(l:match[2])
+    endif
+
+    " Check if we're inside a fold - look upward for the fold header
+    let l:search_line = l:lnum
+    while l:search_line > 0
+        let l:search_text = getline(l:search_line)
+        let l:match = matchlist(l:search_text, '^\s*\[\(.\)\]\s*\(\d\+\)\.')
+        if !empty(l:match)
+            return str2nr(l:match[2])
+        endif
+        " Stop if we hit a fold end marker (we went too far)
+        if l:search_text =~# '}}}'
+            break
+        endif
+        let l:search_line -= 1
+    endwhile
+
+    return 0
+endfunction
+
+" Find the line number of a specific issue's checkbox
+function! s:FindIssueLine(issue_num)
+    let l:pattern = '^\s*\[.\]\s*' . a:issue_num . '\.'
+    let l:lnum = 1
+    while l:lnum <= line('$')
+        if getline(l:lnum) =~# l:pattern
+            return l:lnum
+        endif
+        let l:lnum += 1
+    endwhile
+    return 0
+endfunction
+
+" Update the checkbox display for an issue
+function! vim4rabbit#UpdateCheckbox(issue_num, selected)
+    let l:lnum = s:FindIssueLine(a:issue_num)
+    if l:lnum == 0
+        return
+    endif
+
+    let l:line = getline(l:lnum)
+    let l:new_char = a:selected ? 'x' : ' '
+    let l:new_line = substitute(l:line, '^\(\s*\)\[.\]', '\1[' . l:new_char . ']', '')
+
+    setlocal modifiable
+    call setline(l:lnum, l:new_line)
+    setlocal nomodifiable
+endfunction
+
+" Toggle issue selection at cursor
+function! vim4rabbit#ToggleIssueSelection()
+    let l:issue_num = vim4rabbit#GetIssueAtCursor()
+    if l:issue_num == 0
+        echo "No issue at cursor"
+        return
+    endif
+
+    " Initialize selections dict if needed
+    if !exists('b:vim4rabbit_selections')
+        let b:vim4rabbit_selections = {}
+    endif
+
+    " Toggle selection state
+    let l:key = string(l:issue_num)
+    if has_key(b:vim4rabbit_selections, l:key) && b:vim4rabbit_selections[l:key]
+        let b:vim4rabbit_selections[l:key] = 0
+        call vim4rabbit#UpdateCheckbox(l:issue_num, 0)
+    else
+        let b:vim4rabbit_selections[l:key] = 1
+        call vim4rabbit#UpdateCheckbox(l:issue_num, 1)
+    endif
+endfunction
+
+" Select all issues
+function! vim4rabbit#SelectAllIssues()
+    if s:review_issue_count == 0
+        return
+    endif
+
+    if !exists('b:vim4rabbit_selections')
+        let b:vim4rabbit_selections = {}
+    endif
+
+    for l:i in range(1, s:review_issue_count)
+        let b:vim4rabbit_selections[string(l:i)] = 1
+        call vim4rabbit#UpdateCheckbox(l:i, 1)
+    endfor
+
+    echo "Selected all " . s:review_issue_count . " issue(s)"
+endfunction
+
+" Deselect all issues
+function! vim4rabbit#DeselectAllIssues()
+    if s:review_issue_count == 0
+        return
+    endif
+
+    if !exists('b:vim4rabbit_selections')
+        let b:vim4rabbit_selections = {}
+    endif
+
+    for l:i in range(1, s:review_issue_count)
+        let b:vim4rabbit_selections[string(l:i)] = 0
+        call vim4rabbit#UpdateCheckbox(l:i, 0)
+    endfor
+
+    echo "Deselected all issues"
+endfunction
+
+" Get list of selected issue numbers (placeholder for future AI integration)
+function! vim4rabbit#GetSelectedIssues()
+    if !exists('b:vim4rabbit_selections')
+        return []
+    endif
+
+    let l:selected = []
+    for [l:key, l:val] in items(b:vim4rabbit_selections)
+        if l:val
+            call add(l:selected, str2nr(l:key))
+        endif
+    endfor
+
+    return sort(l:selected, 'n')
+endfunction
+
+" Placeholder for future AI-powered fix application
+function! vim4rabbit#ApplySelectedFixes()
+    let l:selected = vim4rabbit#GetSelectedIssues()
+    if empty(l:selected)
+        echo "No issues selected"
+        return
+    endif
+
+    echo "Selected issues: " . join(l:selected, ', ') . " (AI fix not yet implemented)"
 endfunction

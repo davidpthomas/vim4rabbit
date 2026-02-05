@@ -12,6 +12,10 @@ from typing import List
 class ReviewIssue:
     """A single review issue from CodeRabbit output."""
     lines: List[str] = field(default_factory=list)
+    file_path: str = ""
+    line_range: str = ""
+    issue_type: str = ""
+    summary: str = ""
 
     def to_list(self) -> List[str]:
         """Convert to list for Vim serialization."""
