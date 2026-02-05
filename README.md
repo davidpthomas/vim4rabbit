@@ -24,30 +24,8 @@ No mouse required.
 
 ## Installation
 
-### Using Vundle
+NOTE: Currently under review for public usage circa 2026/02/05
 
-1. Add the following line to your `~/.vimrc` between `call vundle#begin()` and `call vundle#end()`:
-
-```vim
-Plugin 'davidpthomas/vim4rabbit'
-```
-
-2. Save the file and run:
-
-```vim
-:source %
-:PluginInstall
-```
-
-Or restart Vim and run `:PluginInstall`.
-
-### Manual Installation
-
-Clone the repository into your Vim bundle directory:
-
-```bash
-git clone https://github.com/davidpthomas/vim4rabbit.git ~/.vim/bundle/vim4rabbit
-```
 
 ## Usage
 
