@@ -4,9 +4,13 @@ A Vim plugin for running CodeRabbit code reviews directly in Vim.
 
 ## Features
 
-- Run CodeRabbit reviews on uncommitted changes without leaving Vim
-- Async execution with animated loading indicator
-- Clean review panel with formatted output
+- Run CodeRabbit reviews on uncommitted, committed, or all changes without leaving Vim
+- Three review modes: uncommitted, committed, and all (committed + uncommitted)
+- Async execution with animated rabbit loading indicator and elapsed time tracking
+- Interactive issue selection with checkboxes for targeted fixes
+- Collapsible issue display using Vim folds
+- Claude Code CLI integration to send selected issues for AI-powered fixes
+- "No changes to review" jumping rabbit animation
 - Help system with keybinding reference
 
 ## Installation
@@ -43,21 +47,34 @@ git clone https://github.com/davidpthomas/vim4rabbit.git ~/.vim/bundle/vim4rabbi
 | `:Rabbit` | Open the help panel (default) |
 | `:Rabbit help` | Open the help panel |
 | `:Rabbit review` | Run CodeRabbit review on uncommitted changes |
+| `:Rabbit review uncommitted` | Run CodeRabbit review on uncommitted changes |
+| `:Rabbit review committed` | Run CodeRabbit review on committed changes |
+| `:Rabbit review all` | Run CodeRabbit review on all changes (committed + uncommitted) |
 
 ### Keybindings
 
 In the help panel:
 - `q` - Close the panel
-- `ru` - Close help and run review
+- `ru` - Close help and run review on uncommitted changes
+- `rc` - Close help and run review on committed changes
+- `ra` - Close help and run review on all changes
 
 In the review panel:
 - `q` - Close the panel
 - `c` - Cancel the running review (while loading)
+- `<CR>` / `za` - Toggle fold on current issue
+- `zM` - Close all folds
+- `zR` - Open all folds
+- `<Space>` - Toggle issue selection (checkbox)
+- `\a` - Select all issues
+- `\n` - Deselect all issues
+- `\c` - Launch Claude Code with selected issues
 
 ## Requirements
 
 - Vim 8.0+ with Python 3 support (`+python3`)
 - CodeRabbit CLI (see setup below)
+- Claude Code CLI (optional, for AI-powered fixes)
 
 ## CodeRabbit CLI Setup
 
@@ -110,7 +127,8 @@ vim4rabbit uses a layered architecture separating UI (VimScript) from business l
 │                  VimScript UI Layer                             │
 │  plugin/vim4rabbit.vim     Entry point, :Rabbit command         │
 │  autoload/vim4rabbit.vim   Buffer management, async jobs,       │
-│                            keybindings, animation timer         │
+│                            keybindings, animation timer,        │
+│                            issue selection, Claude integration  │
 └──────────────────────────┬──────────────────────────────────────┘
                            │ py3eval()
                            ▼
@@ -129,14 +147,20 @@ vim4rabbit uses a layered architecture separating UI (VimScript) from business l
                           ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                  CodeRabbit CLI                                 │
-│  coderabbit review --type uncommitted --plain                   │
+│  coderabbit review --type {uncommitted|committed|all} --plain   │
+└─────────────────────────────────────────────────────────────────┘
+                          │
+                          ▼ (selected issues)
+┌─────────────────────────────────────────────────────────────────┐
+│                  Claude Code CLI (optional)                     │
+│  Launched in Vim terminal with selected issue prompts           │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Data Flow: `:Rabbit review`
 
 ```
-User runs :Rabbit review
+User runs :Rabbit review [type]
         │
         ▼
 ┌───────────────────┐     ┌───────────────────┐
@@ -153,21 +177,27 @@ User runs :Rabbit review
              │ (750ms)   │  │           │   │           │
              └───────────┘  └───────────┘   └─────┬─────┘
                                                   │
-                                    ┌─────────────┴─────────────┐
-                                    │                           │
-                                    ▼                           ▼
-                             ┌───────────┐               ┌───────────┐
-                             │ Success:  │               │ Error:    │
-                             │ Parse &   │               │ Format    │
-                             │ format    │               │ error msg │
-                             └─────┬─────┘               └─────┬─────┘
+                                    ┌─────────────┼─────────────┐
+                                    │             │             │
+                                    ▼             ▼             ▼
+                             ┌───────────┐ ┌───────────┐ ┌───────────┐
+                             │ Success:  │ │ No files: │ │ Error:    │
+                             │ Parse &   │ │ Jumping   │ │ Format    │
+                             │ format    │ │ rabbit    │ │ error msg │
+                             └─────┬─────┘ └───────────┘ └─────┬─────┘
                                    │                           │
                                    └─────────────┬─────────────┘
                                                  │
                                                  ▼
                                    ┌───────────────────────┐
                                    │ Display results in    │
-                                   │ review buffer         │
+                                   │ review buffer (folds) │
+                                   └───────────┬───────────┘
+                                               │
+                                               ▼
+                                   ┌───────────────────────┐
+                                   │ User selects issues   │
+                                   │ → Launch Claude Code  │
                                    └───────────────────────┘
 ```
 
@@ -177,12 +207,19 @@ User runs :Rabbit review
 vim4rabbit/
 ├── plugin/vim4rabbit.vim      # Plugin entry point, defines :Rabbit command
 ├── autoload/vim4rabbit.vim    # UI/buffer operations (VimScript)
-└── pythonx/vim4rabbit/        # Python backend
-    ├── __init__.py            # Public API for VimScript
-    ├── cli.py                 # CodeRabbit CLI execution
-    ├── parser.py              # Review output parsing
-    ├── content.py             # UI content rendering
-    └── types.py               # Data types
+├── pythonx/vim4rabbit/        # Python backend
+│   ├── __init__.py            # Public API for VimScript
+│   ├── cli.py                 # CodeRabbit CLI execution
+│   ├── parser.py              # Review output parsing
+│   ├── content.py             # UI content rendering
+│   └── types.py               # Data types
+├── doc/vim4rabbit.txt         # Vim help documentation
+├── tests/                     # Test suite (pytest)
+├── dev/                       # Docker development environment
+│   ├── Dockerfile             # Development container
+│   ├── build.sh               # Build script
+│   └── run.sh                 # Run script
+└── .coderabbit.yaml           # CodeRabbit configuration
 ```
 
 ## Development
