@@ -13,6 +13,20 @@ A Vim plugin for running CodeRabbit code reviews directly in Vim.
 - "No changes to review" jumping rabbit animation
 - Help system with keybinding reference
 
+## Screenshots
+
+<a href="doc/assets/coderabbit_review_in_progress.png">
+  <img src="doc/assets/coderabbit_review_in_progress.png" width="400" alt="CodeRabbit review in progress">
+</a>
+
+Animated rabbit loading indicator with elapsed timer while a CodeRabbit review runs.
+
+<a href="doc/assets/vim_coderabbit_claude.png">
+  <img src="doc/assets/vim_coderabbit_claude.png" width="400" alt="Vim with CodeRabbit review and Claude Code">
+</a>
+
+Full workflow: source code, CodeRabbit review results with selectable issues, and Claude Code applying fixes side by side.
+
 ## Installation
 
 ### Using Vundle
