@@ -19,27 +19,33 @@ def parse_issue_metadata(lines: List[str]) -> Dict[str, str]:
     - Line: 123 to 456 (or Line: 123)
     - Type: potential_issue
     - Comment: first line after this becomes the summary
+    - Prompt: AI-actionable prompt for implementing the fix
 
     Args:
         lines: List of lines from a single issue
 
     Returns:
-        Dict with keys: file_path, line_range, issue_type, summary
+        Dict with keys: file_path, line_range, issue_type, summary, prompt
     """
     metadata: Dict[str, str] = {
         "file_path": "",
         "line_range": "",
         "issue_type": "",
         "summary": "",
+        "prompt": "",
     }
 
     in_comment = False
+    in_prompt = False
+    prompt_lines: List[str] = []
+
     for i, line in enumerate(lines):
         stripped = line.strip()
 
         # Extract File:
         if stripped.startswith("File:"):
             metadata["file_path"] = stripped[5:].strip()
+            in_prompt = False
             continue
 
         # Extract Line: (handles "Line: X" and "Line: X to Y")
@@ -48,16 +54,19 @@ def parse_issue_metadata(lines: List[str]) -> Dict[str, str]:
             # Normalize "X to Y" to "X-Y"
             line_text = re.sub(r"(\d+)\s+to\s+(\d+)", r"\1-\2", line_text)
             metadata["line_range"] = line_text
+            in_prompt = False
             continue
 
         # Extract Type:
         if stripped.startswith("Type:"):
             metadata["issue_type"] = stripped[5:].strip()
+            in_prompt = False
             continue
 
         # Extract summary from first non-empty line after "Comment:"
         if stripped.startswith("Comment:"):
             in_comment = True
+            in_prompt = False
             # Check if there's text on the same line as "Comment:"
             comment_text = stripped[8:].strip()
             if comment_text:
@@ -65,15 +74,36 @@ def parse_issue_metadata(lines: List[str]) -> Dict[str, str]:
                 in_comment = False
             continue
 
+        # Extract Prompt: (may be multi-line)
+        if stripped.startswith("Prompt:"):
+            in_prompt = True
+            in_comment = False
+            # Check if there's text on the same line as "Prompt:"
+            prompt_text = stripped[7:].strip()
+            if prompt_text:
+                prompt_lines.append(prompt_text)
+            continue
+
         if in_comment and stripped:
             metadata["summary"] = stripped
             in_comment = False
+            continue
+
+        # Continue collecting prompt lines until we hit another field
+        if in_prompt:
+            if stripped:
+                prompt_lines.append(stripped)
+
+    # Join prompt lines
+    metadata["prompt"] = "\n".join(prompt_lines)
 
     # Fallback: if no summary found, use first non-empty line
     if not metadata["summary"]:
         for line in lines:
             stripped = line.strip()
-            if stripped and not stripped.startswith(("File:", "Line:", "Type:", "Comment:")):
+            if stripped and not stripped.startswith(
+                ("File:", "Line:", "Type:", "Comment:", "Prompt:")
+            ):
                 metadata["summary"] = stripped
                 break
 
@@ -155,5 +185,6 @@ def parse_review_issues(output: str) -> List[ReviewIssue]:
         issue.line_range = metadata["line_range"]
         issue.issue_type = metadata["issue_type"]
         issue.summary = metadata["summary"]
+        issue.prompt = metadata["prompt"]
 
     return issues

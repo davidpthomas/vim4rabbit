@@ -223,6 +223,9 @@ function! vim4rabbit#Review(...)
     nnoremap <buffer> <silent> <leader>a :call vim4rabbit#SelectAllIssues()<CR>
     nnoremap <buffer> <silent> <leader>n :call vim4rabbit#DeselectAllIssues()<CR>
 
+    " Claude integration
+    nnoremap <buffer> <silent> <leader>c :call vim4rabbit#LaunchClaude()<CR>
+
     " Clean up when buffer is wiped
     autocmd BufWipeout <buffer> call vim4rabbit#CleanupReview()
 
@@ -370,10 +373,29 @@ function! s:OnReviewExit(job, exit_status)
             \ l:result.success . ', ' .
             \ string(l:result.issues) . ', ' .
             \ string(l:result.error_message) . ')')
+        " Store issues data for Claude integration
+        call s:StoreIssuesData(l:result.issues_data)
     endif
 
     " Update buffer content
     call s:UpdateReviewBuffer(l:content)
+endfunction
+
+" Store issues data in buffer-local variable for Claude integration
+function! s:StoreIssuesData(issues_data)
+    if s:review_bufnr == -1 || !bufexists(s:review_bufnr)
+        return
+    endif
+
+    let l:winnr = bufwinnr(s:review_bufnr)
+    if l:winnr == -1
+        return
+    endif
+
+    let l:cur_winnr = winnr()
+    execute l:winnr . 'wincmd w'
+    let b:vim4rabbit_issues = a:issues_data
+    execute l:cur_winnr . 'wincmd w'
 endfunction
 
 " Cancel the running review and close buffer
@@ -632,4 +654,40 @@ function! vim4rabbit#ApplySelectedFixes()
     endif
 
     echo "Selected issues: " . join(l:selected, ', ') . " (AI fix not yet implemented)"
+endfunction
+
+" Launch Claude Code CLI with selected issues
+function! vim4rabbit#LaunchClaude()
+    let l:selected = vim4rabbit#GetSelectedIssues()
+    if empty(l:selected)
+        echo "No issues selected. Use Space to select issues."
+        return
+    endif
+
+    " Check if issues data is available
+    if !exists('b:vim4rabbit_issues') || empty(b:vim4rabbit_issues)
+        echo "No issue data available. Please run a review first."
+        return
+    endif
+
+    " Build the prompt via Python
+    let l:prompt = py3eval('vim4rabbit.vim_build_claude_prompt(' .
+        \ string(l:selected) . ', ' .
+        \ json_encode(b:vim4rabbit_issues) . ')')
+
+    if empty(l:prompt)
+        echo "Could not build prompt for selected issues."
+        return
+    endif
+
+    " Open terminal with Claude CLI in a vertical split
+    " Use term_start for better control
+    let l:term_opts = {
+        \ 'term_name': 'Claude Code',
+        \ 'vertical': 1,
+        \ 'term_finish': 'close',
+        \ }
+
+    " Start the terminal with claude command and prompt
+    call term_start(['claude', l:prompt], l:term_opts)
 endfunction

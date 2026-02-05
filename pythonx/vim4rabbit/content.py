@@ -177,7 +177,7 @@ def get_animation_frame(frame_number: int) -> List[str]:
         "",
         "  Review in progress!",
         "",
-        "  This may take 30-90+ sec depending on the size of the review.",
+        "  This may take a few minutes depending on the size of the review.",
         "  Your results will be displayed shortly...",
         "",
     ]
@@ -192,16 +192,12 @@ def get_animation_frame(frame_number: int) -> List[str]:
 HELP_COMMANDS: List[List[Tuple[str, str]]] = [
     # Column 1
     [("ru", "Review Uncommitted"), ("rc", "Review Committed"), ("ra", "Review All")],
-    # Column 2
-    [("za", "Toggle fold"), ("zM", "Close all folds"), ("zR", "Open all folds")],
-    # Column 3
-    [("Space", "Toggle select"), ("\\a", "Select all"), ("\\n", "Deselect all")],
 ]
 
 
 def render_help(width: int) -> List[str]:
     """
-    Render the help screen content with 3-column layout.
+    Render the help screen content with single column layout.
 
     Ported from vim4rabbit#RenderHelp().
 
@@ -211,51 +207,18 @@ def render_help(width: int) -> List[str]:
     Returns:
         List of strings (lines) for the help buffer
     """
-    col_width = (width - 4) // 3
-
     content: List[str] = []
 
     # Header line with emoji
     content.append("  \U0001F430 vim4rabbit Help")  # rabbit emoji
     content.append("")
 
-    # Get columns
-    col1 = HELP_COMMANDS[0] if len(HELP_COMMANDS) > 0 else []
-    col2 = HELP_COMMANDS[1] if len(HELP_COMMANDS) > 1 else []
-    col3 = HELP_COMMANDS[2] if len(HELP_COMMANDS) > 2 else []
+    # Get commands
+    commands = HELP_COMMANDS[0] if len(HELP_COMMANDS) > 0 else []
 
-    # Calculate max rows needed across all columns
-    max_rows = max(len(col1), len(col2), len(col3), 1)
-
-    # Build command rows (3 columns)
-    for row in range(max_rows):
-        line = "  "
-
-        # Column 1
-        if row < len(col1):
-            key, desc = col1[row]
-            cell = f"[{key}] {desc}"
-        else:
-            cell = ""
-        line += cell + " " * (col_width - len(cell))
-
-        # Column 2
-        if row < len(col2):
-            key, desc = col2[row]
-            cell = f"[{key}] {desc}"
-        else:
-            cell = ""
-        line += cell + " " * (col_width - len(cell))
-
-        # Column 3
-        if row < len(col3):
-            key, desc = col3[row]
-            cell = f"[{key}] {desc}"
-        else:
-            cell = ""
-        line += cell
-
-        content.append(line)
+    # Build command rows
+    for key, desc in commands:
+        content.append(f"  [{key}] {desc}")
 
     # Bottom line with quit on the right
     quit_text = "[q] Quit"
@@ -322,7 +285,7 @@ def format_review_output(result: ReviewResult) -> List[str]:
                 content.append("")
 
     # Footer with keybinding hints
-    content.append("  [za] toggle fold | [Space] toggle select | [q] close")
+    content.append("  [za] toggle fold | [Space] toggle select | [\\c] claude | [q] close")
 
     return content
 

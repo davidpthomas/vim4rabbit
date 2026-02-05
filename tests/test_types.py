@@ -24,6 +24,29 @@ class TestReviewIssue:
         issue = ReviewIssue(lines=lines)
         assert issue.to_list() == lines
 
+    def test_to_dict(self):
+        """Test conversion to dict with full metadata."""
+        issue = ReviewIssue(
+            lines=["Line 1", "Line 2"],
+            file_path="src/main.py",
+            line_range="10-20",
+            issue_type="potential_issue",
+            summary="Test summary",
+            prompt="Fix the issue at line 10",
+        )
+        d = issue.to_dict()
+        assert d["lines"] == ["Line 1", "Line 2"]
+        assert d["file_path"] == "src/main.py"
+        assert d["line_range"] == "10-20"
+        assert d["issue_type"] == "potential_issue"
+        assert d["summary"] == "Test summary"
+        assert d["prompt"] == "Fix the issue at line 10"
+
+    def test_prompt_field(self):
+        """Test prompt field initialization."""
+        issue = ReviewIssue(prompt="Fix this bug")
+        assert issue.prompt == "Fix this bug"
+
 
 class TestReviewResult:
     """Tests for ReviewResult dataclass."""
@@ -51,6 +74,9 @@ class TestReviewResult:
         assert d["success"] is True
         assert d["issues"] == [["Line 1", "Line 2"]]
         assert d["error_message"] == ""
+        assert "issues_data" in d
+        assert len(d["issues_data"]) == 1
+        assert d["issues_data"][0]["lines"] == ["Line 1", "Line 2"]
 
     def test_error_result(self):
         """Test error result."""

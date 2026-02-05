@@ -16,10 +16,22 @@ class ReviewIssue:
     line_range: str = ""
     issue_type: str = ""
     summary: str = ""
+    prompt: str = ""  # AI prompt for implementing the fix
 
     def to_list(self) -> List[str]:
         """Convert to list for Vim serialization."""
         return self.lines
+
+    def to_dict(self) -> dict:
+        """Convert to dict for Vim serialization with full metadata."""
+        return {
+            "lines": self.lines,
+            "file_path": self.file_path,
+            "line_range": self.line_range,
+            "issue_type": self.issue_type,
+            "summary": self.summary,
+            "prompt": self.prompt,
+        }
 
 
 @dataclass
@@ -35,5 +47,6 @@ class ReviewResult:
         return {
             "success": self.success,
             "issues": [issue.to_list() for issue in self.issues],
+            "issues_data": [issue.to_dict() for issue in self.issues],
             "error_message": self.error_message,
         }
