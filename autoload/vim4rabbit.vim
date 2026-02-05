@@ -17,6 +17,11 @@ let s:spinner_timer = v:null
 let s:spinner_frame = 0
 let s:animation_frame_count = 24
 
+" No-work animation state
+let s:no_work_timer = v:null
+let s:no_work_frame = 0
+let s:no_work_frame_count = 8
+
 " Main Rabbit command dispatcher
 function! vim4rabbit#Rabbit(subcmd)
     let l:cmd = a:subcmd
@@ -274,6 +279,48 @@ function! s:StopSpinner()
     endif
 endfunction
 
+" Start the no-work animation
+function! s:StartNoWorkAnimation()
+    let s:no_work_frame = 0
+    call s:UpdateNoWorkAnimation(0)
+    let s:no_work_timer = timer_start(750, function('s:UpdateNoWorkAnimation'), {'repeat': -1})
+endfunction
+
+" Stop the no-work animation timer
+function! s:StopNoWorkAnimation()
+    if s:no_work_timer != v:null
+        call timer_stop(s:no_work_timer)
+        let s:no_work_timer = v:null
+    endif
+endfunction
+
+" Update the no-work animation in the review buffer
+function! s:UpdateNoWorkAnimation(timer)
+    if s:review_bufnr == -1 || !bufexists(s:review_bufnr)
+        call s:StopNoWorkAnimation()
+        return
+    endif
+
+    let l:winnr = bufwinnr(s:review_bufnr)
+    if l:winnr == -1
+        return
+    endif
+
+    " Get current animation frame from Python
+    let l:content = py3eval('vim4rabbit.vim_get_no_work_animation_frame(' . s:no_work_frame . ')')
+    let s:no_work_frame = (s:no_work_frame + 1) % s:no_work_frame_count
+
+    " Update buffer
+    let l:cur_winnr = winnr()
+    execute l:winnr . 'wincmd w'
+    setlocal modifiable
+    silent! %delete _
+    call setline(1, l:content)
+    setlocal nomodifiable
+    execute l:cur_winnr . 'wincmd w'
+    redraw
+endfunction
+
 " Callback for job output (stdout and stderr)
 function! s:OnReviewOutput(channel, msg)
     call add(s:review_output, a:msg)
@@ -294,6 +341,12 @@ function! s:OnReviewExit(job, exit_status)
 
     " Combine output
     let l:output = join(s:review_output, '')
+
+    " Check if this is a "no files" error - show jumping rabbit animation
+    if a:exit_status != 0 && py3eval('vim4rabbit.vim_is_no_files_error(' . json_encode(l:output) . ')')
+        call s:StartNoWorkAnimation()
+        return
+    endif
 
     " Format output via Python
     if a:exit_status != 0
@@ -365,6 +418,9 @@ function! vim4rabbit#CloseReview()
     " Stop the spinner
     call s:StopSpinner()
 
+    " Stop the no-work animation
+    call s:StopNoWorkAnimation()
+
     " Cancel any running job first
     if s:review_job != v:null && job_status(s:review_job) ==# 'run'
         call job_stop(s:review_job, 'kill')
@@ -380,6 +436,9 @@ endfunction
 function! vim4rabbit#CleanupReview()
     " Stop the spinner
     call s:StopSpinner()
+
+    " Stop the no-work animation
+    call s:StopNoWorkAnimation()
 
     " Cancel any running job
     if s:review_job != v:null && job_status(s:review_job) ==# 'run'
