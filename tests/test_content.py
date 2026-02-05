@@ -6,6 +6,8 @@ from vim4rabbit.content import (
     format_review_output,
     format_loading_message,
     format_cancelled_message,
+    format_elapsed_time,
+    get_animation_frame,
     get_no_work_animation_frame,
     get_no_work_frame_count,
     is_no_files_error,
@@ -242,3 +244,91 @@ class TestIsNoFilesError:
         assert is_no_files_error("Permission denied") is False
         assert is_no_files_error("Network error") is False
         assert is_no_files_error("Syntax error in file.py") is False
+
+
+class TestFormatElapsedTime:
+    """Tests for format_elapsed_time function."""
+
+    def test_zero_seconds(self):
+        """Test formatting zero seconds."""
+        assert format_elapsed_time(0) == "00min 00sec"
+
+    def test_seconds_only(self):
+        """Test formatting with only seconds."""
+        assert format_elapsed_time(5) == "00min 05sec"
+        assert format_elapsed_time(41) == "00min 41sec"
+
+    def test_minutes_and_seconds(self):
+        """Test formatting with minutes and seconds."""
+        assert format_elapsed_time(61) == "01min 01sec"
+        assert format_elapsed_time(221) == "03min 41sec"
+
+    def test_large_values(self):
+        """Test formatting with large values."""
+        assert format_elapsed_time(600) == "10min 00sec"
+        assert format_elapsed_time(3599) == "59min 59sec"
+
+    def test_exact_minute(self):
+        """Test formatting exact minutes."""
+        assert format_elapsed_time(60) == "01min 00sec"
+        assert format_elapsed_time(120) == "02min 00sec"
+
+
+class TestAnimationFrameElapsedTime:
+    """Tests for elapsed time display in animation frames."""
+
+    def test_animation_frame_shows_elapsed(self):
+        """Test that animation frame includes elapsed time."""
+        content = get_animation_frame(0, elapsed_secs=65)
+        full_text = "\n".join(content)
+        assert "01min 05sec" in full_text
+
+    def test_animation_frame_shows_zero_elapsed(self):
+        """Test that animation frame shows 00min 00sec at start."""
+        content = get_animation_frame(0, elapsed_secs=0)
+        full_text = "\n".join(content)
+        assert "00min 00sec" in full_text
+
+    def test_animation_frame_default_no_elapsed_arg(self):
+        """Test that animation frame works without elapsed_secs arg."""
+        content = get_animation_frame(0)
+        full_text = "\n".join(content)
+        assert "00min 00sec" in full_text
+
+
+class TestFormatReviewOutputElapsedTime:
+    """Tests for elapsed time display in review output."""
+
+    def test_elapsed_time_shown_with_issues(self):
+        """Test elapsed time is shown next to issue count."""
+        issues = [ReviewIssue(lines=["Problem 1"])]
+        result = ReviewResult(success=True, issues=issues)
+        content = format_review_output(result, elapsed_secs=221)
+        full_text = "\n".join(content)
+        assert "Found 1 issue(s)" in full_text
+        assert "03min 41sec" in full_text
+
+    def test_elapsed_time_default_zero(self):
+        """Test elapsed time defaults to zero."""
+        issues = [ReviewIssue(lines=["Problem 1"])]
+        result = ReviewResult(success=True, issues=issues)
+        content = format_review_output(result)
+        full_text = "\n".join(content)
+        assert "00min 00sec" in full_text
+
+    def test_no_elapsed_time_on_error(self):
+        """Test that error results don't show elapsed time in issue line."""
+        result = ReviewResult(success=False, error_message="Something failed")
+        content = format_review_output(result, elapsed_secs=100)
+        full_text = "\n".join(content)
+        assert "Error" in full_text
+        # Elapsed time should NOT appear in error output
+        assert "01min 40sec" not in full_text
+
+    def test_no_elapsed_time_when_no_issues(self):
+        """Test that no-issues result doesn't show elapsed time."""
+        result = ReviewResult(success=True, issues=[])
+        content = format_review_output(result, elapsed_secs=100)
+        full_text = "\n".join(content)
+        assert "No issues found" in full_text
+        assert "01min 40sec" not in full_text

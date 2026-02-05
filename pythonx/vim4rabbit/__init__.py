@@ -12,6 +12,7 @@ from typing import List
 from .cli import run_review
 from .content import (
     format_cancelled_message,
+    format_elapsed_time,
     format_loading_message,
     format_review_output,
     get_animation_frame,
@@ -63,6 +64,7 @@ def vim_format_review(
     success: bool,
     issues_data: list,
     error_message: str,
+    elapsed_secs: int = 0,
 ) -> List[str]:
     """
     Format review results for display.
@@ -74,6 +76,7 @@ def vim_format_review(
         issues_data: List of issue dicts with full metadata (from issues_data),
                      or list of line-lists for backward compatibility
         error_message: Error message if failed
+        elapsed_secs: Total elapsed seconds for the review command
 
     Returns:
         List of strings (lines) for the review buffer
@@ -101,7 +104,7 @@ def vim_format_review(
         error_message=error_message,
     )
 
-    return format_review_output(result)
+    return format_review_output(result, elapsed_secs=elapsed_secs)
 
 
 def vim_get_loading_content() -> List[str]:
@@ -128,19 +131,20 @@ def vim_get_cancelled_content() -> List[str]:
     return format_cancelled_message()
 
 
-def vim_get_animation_frame(frame: int) -> List[str]:
+def vim_get_animation_frame(frame: int, elapsed_secs: int = 0) -> List[str]:
     """
     Get a specific animation frame for the loading spinner.
 
-    Called from VimScript: py3eval('vim4rabbit.vim_get_animation_frame(' . frame . ')')
+    Called from VimScript: py3eval('vim4rabbit.vim_get_animation_frame(frame, secs)')
 
     Args:
         frame: Frame number (0-23, wraps around)
+        elapsed_secs: Elapsed seconds since review started
 
     Returns:
         List of strings for the animation frame
     """
-    return get_animation_frame(frame)
+    return get_animation_frame(frame, elapsed_secs=elapsed_secs)
 
 
 def vim_get_no_work_animation_frame(frame: int) -> List[str]:

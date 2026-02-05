@@ -20,6 +20,10 @@ let s:spinner_timer = v:null
 let s:spinner_frame = 0
 let s:animation_frame_count = 24
 
+" Elapsed time tracking
+let s:review_start_time = []
+let s:review_elapsed_secs = 0
+
 " No-work animation state
 let s:no_work_timer = v:null
 let s:no_work_frame = 0
@@ -239,6 +243,10 @@ function! vim4rabbit#RunReviewAsync(review_type)
     " Reset output collector
     let s:review_output = []
 
+    " Record start time for elapsed timer
+    let s:review_start_time = reltime()
+    let s:review_elapsed_secs = 0
+
     " Start the animation
     let s:spinner_frame = 0
     call s:UpdateSpinner(0)
@@ -272,8 +280,11 @@ function! s:UpdateSpinner(timer)
         return
     endif
 
-    " Get current animation frame from Python
-    let l:content = py3eval('vim4rabbit.vim_get_animation_frame(' . s:spinner_frame . ')')
+    " Calculate elapsed seconds
+    let l:elapsed_secs = float2nr(reltimefloat(reltime(s:review_start_time)))
+
+    " Get current animation frame from Python with elapsed time
+    let l:content = py3eval('vim4rabbit.vim_get_animation_frame(' . s:spinner_frame . ', ' . l:elapsed_secs . ')')
     let s:spinner_frame = (s:spinner_frame + 1) % s:animation_frame_count
 
     " Update buffer
@@ -344,6 +355,9 @@ endfunction
 
 " Callback when job exits
 function! s:OnReviewExit(job, exit_status)
+    " Capture elapsed time before stopping spinner
+    let s:review_elapsed_secs = float2nr(reltimefloat(reltime(s:review_start_time)))
+
     " Stop the spinner
     call s:StopSpinner()
 
@@ -364,15 +378,16 @@ function! s:OnReviewExit(job, exit_status)
         return
     endif
 
-    " Format output via Python
+    " Format output via Python (pass elapsed time for display)
     if a:exit_status != 0
-        let l:content = py3eval("vim4rabbit.vim_format_review(False, [], " . json_encode(l:output) . ")")
+        let l:content = py3eval("vim4rabbit.vim_format_review(False, [], " . json_encode(l:output) . ", " . s:review_elapsed_secs . ")")
     else
         let l:result = py3eval("vim4rabbit.vim_parse_review_output(" . json_encode(l:output) . ")")
         let l:content = py3eval('vim4rabbit.vim_format_review(' .
             \ l:result.success . ', ' .
             \ string(l:result.issues_data) . ', ' .
-            \ string(l:result.error_message) . ')')
+            \ string(l:result.error_message) . ', ' .
+            \ s:review_elapsed_secs . ')')
         " Store issues data for Claude integration
         call s:StoreIssuesData(l:result.issues_data)
     endif
