@@ -175,7 +175,7 @@ def get_animation_frame(frame_number: int) -> List[str]:
     content: List[str] = [
         "  \U0001F430 coderabbit",  # rabbit emoji header
         "",
-        "  Coderabbit review in progress!",
+        "  Review in progress!",
         "",
         "  This may take 30-90+ sec depending on the size of the review.",
         "  Your results will be displayed shortly...",
@@ -193,9 +193,9 @@ HELP_COMMANDS: List[List[Tuple[str, str]]] = [
     # Column 1
     [("ru", "Review Uncommitted"), ("rc", "Review Committed"), ("ra", "Review All")],
     # Column 2
-    [],
+    [("za", "Toggle fold"), ("zM", "Close all folds"), ("zR", "Open all folds")],
     # Column 3
-    [],
+    [("Space", "Toggle select"), ("\\a", "Select all"), ("\\n", "Deselect all")],
 ]
 
 
@@ -267,9 +267,13 @@ def render_help(width: int) -> List[str]:
 
 def format_review_output(result: ReviewResult) -> List[str]:
     """
-    Format review output for display in buffer.
+    Format review output for display in buffer with vim folds and checkboxes.
 
     Ported from vim4rabbit#RunReview() (content building part).
+    Now includes:
+    - Vim fold markers ({{{ and }}})
+    - Checkbox prefixes [ ] for issue selection
+    - Filtered preamble (content before first issue)
 
     Args:
         result: ReviewResult from running CodeRabbit
@@ -293,17 +297,32 @@ def format_review_output(result: ReviewResult) -> List[str]:
             content.append("  \u2713 No issues found!")  # checkmark
         else:
             content.append(f"  Found {len(result.issues)} issue(s):")
+            content.append("")
 
             for i, issue in enumerate(result.issues, 1):
-                content.append("")
-                content.append("  " + "\u2550" * 40)  # double line
-                content.append(f"  Issue #{i}")
-                content.append("  " + "\u2500" * 40)  # single line
+                # Build fold header with checkbox, number, summary, and location
+                summary = issue.summary or "Issue"
+                location = ""
+                if issue.file_path:
+                    location = issue.file_path
+                    if issue.line_range:
+                        location += f":{issue.line_range}"
+                    location = f" ({location})"
+
+                # Fold header line with opening marker
+                fold_header = f"  [ ] {i}. {summary}{location} " + "{{" + "{"
+                content.append(fold_header)
+
+                # Issue content (indented)
                 for line in issue.lines:
                     content.append(f"    {line}")
 
-    content.append("")
-    content.append("  Press [q] to close")
+                # Fold closing marker
+                content.append("  " + "}}" + "}")
+                content.append("")
+
+    # Footer with keybinding hints
+    content.append("  [za] toggle fold | [Space] toggle select | [q] close")
 
     return content
 
