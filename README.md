@@ -159,7 +159,7 @@ vim4rabbit uses a layered architecture separating UI (VimScript) from business l
 
 ### Data Flow: `:Rabbit review`
 
-```
+```text
 User runs :Rabbit review [type]
         │
         ▼
