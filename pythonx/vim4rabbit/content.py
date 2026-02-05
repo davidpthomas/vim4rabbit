@@ -193,7 +193,7 @@ def get_animation_frame(frame_number: int, elapsed_secs: int = 0) -> List[str]:
     content: List[str] = [
         "  \U0001F430 coderabbit",  # rabbit emoji header
         "",
-        f"  Review in progress!  {elapsed_str}",
+        f"  Review in progress!  \U0001F552 {elapsed_str}",
         "",
         "  This may take a few minutes depending on the size of the review.",
         "  Your results will be displayed shortly...",
@@ -281,8 +281,10 @@ def format_review_output(result: ReviewResult, elapsed_secs: int = 0) -> List[st
         else:
             elapsed_str = format_elapsed_time(elapsed_secs)
             content.append(
-                f"  Found {len(result.issues)} issue(s):  {elapsed_str}"
+                f"  Found {len(result.issues)} issue(s):  [\U0001F552 {elapsed_str}]"
             )
+            content.append("")
+            content.append("  Select an issue with [Space] then press \\c to implement with Claude Code")
             content.append("")
 
             for i, issue in enumerate(result.issues, 1):

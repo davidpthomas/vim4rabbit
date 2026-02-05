@@ -1,7 +1,7 @@
 """Tests for vim4rabbit.parser module."""
 
 import pytest
-from vim4rabbit.parser import parse_review_issues, parse_issue_metadata
+from vim4rabbit.parser import parse_review_issues, parse_issue_metadata, is_preamble_line
 
 
 class TestParseReviewIssues:
@@ -52,6 +52,74 @@ Third issue"""
         issues = parse_review_issues(output)
         assert len(issues) == 1
         assert issues[0].lines == ["Actual issue"]
+
+
+class TestIsPreambleLine:
+    """Tests for is_preamble_line function."""
+
+    @pytest.mark.parametrize("line", [
+        "Starting CodeRabbit review in plain text mode...",
+        "Connecting to review service",
+        "Setting up",
+        "Analyzing",
+        "Reviewing",
+        "Review completed",
+        "Running",
+        "Processing",
+        "Loading",
+        "Fetching",
+        "Please wait",
+        "In progress",
+    ])
+    def test_preamble_lines_detected(self, line):
+        """Test that all known preamble lines are detected."""
+        assert is_preamble_line(line) is True
+
+    @pytest.mark.parametrize("line", [
+        "File: src/main.py",
+        "Comment: Fix this bug",
+        "Type: potential_issue",
+        "This is actual issue content",
+    ])
+    def test_non_preamble_lines_not_detected(self, line):
+        """Test that issue content is not falsely detected as preamble."""
+        assert is_preamble_line(line) is False
+
+
+class TestParseReviewIssuesPreambleFiltering:
+    """Tests for preamble filtering in parse_review_issues (V4R-48)."""
+
+    def test_coderabbit_preamble_filtered_before_separator(self):
+        """Test that CodeRabbit CLI preamble is not parsed as an issue."""
+        output = (
+            "Starting CodeRabbit review in plain text mode...\n"
+            "Connecting to review service\n"
+            "Setting up\n"
+            "Analyzing\n"
+            "Reviewing\n"
+            "============================================================================\n"
+            "File: autoload/vim4rabbit.vim\n"
+            "Line: 219 to 228\n"
+            "Type: potential_issue\n"
+            "Comment: Remove debug logging\n"
+        )
+        issues = parse_review_issues(output)
+        assert len(issues) == 1
+        assert issues[0].file_path == "autoload/vim4rabbit.vim"
+        assert issues[0].summary == "Remove debug logging"
+
+    def test_preamble_only_output_produces_no_issues(self):
+        """Test that output containing only preamble produces no issues."""
+        output = (
+            "Starting CodeRabbit review in plain text mode...\n"
+            "Connecting to review service\n"
+            "Setting up\n"
+            "Analyzing\n"
+            "Reviewing\n"
+            "Review completed\n"
+        )
+        issues = parse_review_issues(output)
+        assert issues == []
 
 
 class TestParseIssueMetadata:

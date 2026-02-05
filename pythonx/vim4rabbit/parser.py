@@ -132,6 +132,11 @@ def is_preamble_line(line: str) -> bool:
         "fetching",
         "please wait",
         "in progress",
+        "starting coderabbit",
+        "connecting",
+        "setting up",
+        "reviewing",
+        "review completed",
     ]
     line_lower = line.lower().strip()
     return any(pattern in line_lower for pattern in preamble_patterns)
