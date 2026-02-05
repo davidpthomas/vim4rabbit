@@ -191,7 +191,7 @@ def get_animation_frame(frame_number: int) -> List[str]:
 # Help content configuration
 HELP_COMMANDS: List[List[Tuple[str, str]]] = [
     # Column 1
-    [("ru", "Review Uncommitted"), ("rc", "Review Committed")],
+    [("ru", "Review Uncommitted"), ("rc", "Review Committed"), ("ra", "Review All")],
     # Column 2
     [],
     # Column 3

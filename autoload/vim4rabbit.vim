@@ -34,15 +34,17 @@ function! vim4rabbit#Rabbit(subcmd)
         call vim4rabbit#Review('uncommitted')
     elseif l:cmd ==# 'review committed'
         call vim4rabbit#Review('committed')
+    elseif l:cmd ==# 'review all'
+        call vim4rabbit#Review('all')
     else
         echo "Unknown rabbit command: " . l:cmd
-        echo "Available commands: help, review, review uncommitted, review committed"
+        echo "Available commands: help, review, review uncommitted, review committed, review all"
     endif
 endfunction
 
 " Command completion for :Rabbit
 function! vim4rabbit#CompleteRabbit(ArgLead, CmdLine, CursorPos)
-    let l:commands = ['help', 'review', 'review uncommitted', 'review committed']
+    let l:commands = ['help', 'review', 'review uncommitted', 'review committed', 'review all']
     return filter(l:commands, 'v:val =~ "^" . a:ArgLead')
 endfunction
 
@@ -92,6 +94,7 @@ function! vim4rabbit#Help()
     nnoremap <buffer> <silent> q :call vim4rabbit#CloseHelp()<CR>
     nnoremap <buffer> <silent> ru :call vim4rabbit#CloseHelp() \| call vim4rabbit#Review('uncommitted')<CR>
     nnoremap <buffer> <silent> rc :call vim4rabbit#CloseHelp() \| call vim4rabbit#Review('committed')<CR>
+    nnoremap <buffer> <silent> ra :call vim4rabbit#CloseHelp() \| call vim4rabbit#Review('all')<CR>
 
     " Auto-resize on window resize
     augroup vim4rabbit_help_resize
