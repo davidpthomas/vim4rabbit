@@ -29,16 +29,20 @@ function! vim4rabbit#Rabbit(subcmd)
     if l:cmd ==# 'help'
         call vim4rabbit#Help()
     elseif l:cmd ==# 'review'
-        call vim4rabbit#Review()
+        call vim4rabbit#Review('uncommitted')
+    elseif l:cmd ==# 'review uncommitted'
+        call vim4rabbit#Review('uncommitted')
+    elseif l:cmd ==# 'review committed'
+        call vim4rabbit#Review('committed')
     else
         echo "Unknown rabbit command: " . l:cmd
-        echo "Available commands: help, review"
+        echo "Available commands: help, review, review uncommitted, review committed"
     endif
 endfunction
 
 " Command completion for :Rabbit
 function! vim4rabbit#CompleteRabbit(ArgLead, CmdLine, CursorPos)
-    let l:commands = ['help', 'review']
+    let l:commands = ['help', 'review', 'review uncommitted', 'review committed']
     return filter(l:commands, 'v:val =~ "^" . a:ArgLead')
 endfunction
 
@@ -86,7 +90,8 @@ function! vim4rabbit#Help()
 
     " Map keybindings for help buffer
     nnoremap <buffer> <silent> q :call vim4rabbit#CloseHelp()<CR>
-    nnoremap <buffer> <silent> ru :call vim4rabbit#CloseHelp() \| call vim4rabbit#Review()<CR>
+    nnoremap <buffer> <silent> ru :call vim4rabbit#CloseHelp() \| call vim4rabbit#Review('uncommitted')<CR>
+    nnoremap <buffer> <silent> rc :call vim4rabbit#CloseHelp() \| call vim4rabbit#Review('committed')<CR>
 
     " Auto-resize on window resize
     augroup vim4rabbit_help_resize
@@ -152,7 +157,11 @@ function! vim4rabbit#CleanupHelp()
 endfunction
 
 " Open the review buffer on the right side of the screen
-function! vim4rabbit#Review()
+" Optional argument: review_type ('uncommitted' or 'committed', default 'uncommitted')
+function! vim4rabbit#Review(...)
+    " Get review type from argument, default to 'uncommitted'
+    let l:review_type = a:0 > 0 ? a:1 : 'uncommitted'
+
     " If review buffer already exists, just focus it
     if s:review_bufnr != -1 && bufexists(s:review_bufnr)
         let l:winnr = bufwinnr(s:review_bufnr)
@@ -197,11 +206,12 @@ function! vim4rabbit#Review()
     autocmd BufWipeout <buffer> call vim4rabbit#CleanupReview()
 
     " Run the review asynchronously
-    call vim4rabbit#RunReviewAsync()
+    call vim4rabbit#RunReviewAsync(l:review_type)
 endfunction
 
 " Run CodeRabbit CLI asynchronously
-function! vim4rabbit#RunReviewAsync()
+" Argument: review_type ('uncommitted' or 'committed')
+function! vim4rabbit#RunReviewAsync(review_type)
     " Reset output collector
     let s:review_output = []
 
@@ -210,8 +220,9 @@ function! vim4rabbit#RunReviewAsync()
     call s:UpdateSpinner(0)
     let s:spinner_timer = timer_start(750, function('s:UpdateSpinner'), {'repeat': -1})
 
-    " Start the job
-    let l:cmd = ['coderabbit', 'review', '--type', 'uncommitted', '--plain']
+    " Build the command based on review type
+    let l:cmd = ['coderabbit', 'review', '--type', a:review_type, '--plain']
+
     let s:review_job = job_start(l:cmd, {
         \ 'out_cb': function('s:OnReviewOutput'),
         \ 'err_cb': function('s:OnReviewOutput'),
