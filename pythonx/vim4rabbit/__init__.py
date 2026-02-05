@@ -15,6 +15,9 @@ from .content import (
     format_loading_message,
     format_review_output,
     get_animation_frame,
+    get_no_work_animation_frame,
+    get_no_work_frame_count,
+    is_no_files_error,
     render_help,
 )
 from .parser import parse_review_issues
@@ -122,6 +125,48 @@ def vim_get_animation_frame(frame: int) -> List[str]:
         List of strings for the animation frame
     """
     return get_animation_frame(frame)
+
+
+def vim_get_no_work_animation_frame(frame: int) -> List[str]:
+    """
+    Get a specific animation frame for the "no work" state.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_get_no_work_animation_frame(' . frame . ')')
+
+    Args:
+        frame: Frame number (0-7, wraps around)
+
+    Returns:
+        List of strings for the animation frame
+    """
+    return get_no_work_animation_frame(frame)
+
+
+def vim_get_no_work_frame_count() -> int:
+    """
+    Get the number of frames in the no-work animation.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_get_no_work_frame_count()')
+
+    Returns:
+        Number of frames (8)
+    """
+    return get_no_work_frame_count()
+
+
+def vim_is_no_files_error(error_message: str) -> bool:
+    """
+    Check if an error message indicates no files to review.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_is_no_files_error(' . string(msg) . ')')
+
+    Args:
+        error_message: The error message to check
+
+    Returns:
+        True if this is a "no files" error
+    """
+    return is_no_files_error(error_message)
 
 
 def vim_parse_review_output(output: str) -> dict:

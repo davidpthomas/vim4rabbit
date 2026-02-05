@@ -338,3 +338,184 @@ def format_cancelled_message() -> List[str]:
         "",
         "  Press [q] to close",
     ]
+
+
+# Animation frames for rabbit looking for work (8 frames total)
+# Features a jumping rabbit with a large speech bubble
+NO_WORK_ANIMATION_FRAMES: List[List[str]] = [
+    # Frame 0: Rabbit on ground, looking around
+    [
+        r"       ╭─────────────────────────────────╮",
+        r"       │                                 │",
+        r"       │   No changes to review!         │",
+        r"       │   Looking for work...           │",
+        r"       │                                 │",
+        r"       ╰─────────────────────────────────╯",
+        r"                    ╱",
+        r"                   ╱",
+        r"              (\__/) ",
+        r"              (='.'=)   ?",
+        r"              (\")_(\")",
+        r"         ════════════════",
+    ],
+    # Frame 1: Rabbit starts jumping
+    [
+        r"       ╭─────────────────────────────────╮",
+        r"       │                                 │",
+        r"       │   No changes to review!         │",
+        r"       │   Looking for work...           │",
+        r"       │                                 │",
+        r"       ╰─────────────────────────────────╯",
+        r"                    ╱",
+        r"              (\__/)",
+        r"              (=°o°=)  !",
+        r"              (\")_(\")",
+        r"                 ↑",
+        r"         ════════════════",
+    ],
+    # Frame 2: Rabbit mid-air (low)
+    [
+        r"       ╭─────────────────────────────────╮",
+        r"       │                                 │",
+        r"       │   No changes to review!         │",
+        r"       │   Looking for work...           │",
+        r"       │                                 │",
+        r"       ╰─────────────────────────────────╯",
+        r"              (\__/)  ╱",
+        r"              (=^.^=)",
+        r"              (\")_(\")",
+        r"",
+        r"",
+        r"         ════════════════",
+    ],
+    # Frame 3: Rabbit at peak
+    [
+        r"       ╭─────────────────────────────────╮",
+        r"       │                                 │",
+        r"       │   No changes to review!         │",
+        r"       │   Looking for work...           │",
+        r"       │                                 │",
+        r"       ╰───────────(\__/)────────────────╯",
+        r"                   (=°o°=)",
+        r"                   (\")_(\")",
+        r"",
+        r"",
+        r"",
+        r"         ════════════════",
+    ],
+    # Frame 4: Rabbit descending
+    [
+        r"       ╭─────────────────────────────────╮",
+        r"       │                                 │",
+        r"       │   No changes to review!         │",
+        r"       │   Looking for work...           │",
+        r"       │                                 │",
+        r"       ╰─────────────────────────────────╯",
+        r"              (\__/)  ╲",
+        r"              (=^.^=)",
+        r"              (\")_(\")",
+        r"                 ↓",
+        r"",
+        r"         ════════════════",
+    ],
+    # Frame 5: Rabbit landing
+    [
+        r"       ╭─────────────────────────────────╮",
+        r"       │                                 │",
+        r"       │   No changes to review!         │",
+        r"       │   Looking for work...           │",
+        r"       │                                 │",
+        r"       ╰─────────────────────────────────╯",
+        r"                    ╲",
+        r"              (\__/)",
+        r"              (=~.~=) *boing*",
+        r"              (\")_(\")",
+        r"",
+        r"         ════════════════",
+    ],
+    # Frame 6: Rabbit bounced, looking left
+    [
+        r"       ╭─────────────────────────────────╮",
+        r"       │                                 │",
+        r"       │   No changes to review!         │",
+        r"       │   Looking for work...           │",
+        r"       │                                 │",
+        r"       ╰─────────────────────────────────╯",
+        r"                    ╱",
+        r"                   ╱",
+        r"         ?    (\__/)",
+        r"              (='.'=)",
+        r"              (\")_(\")",
+        r"         ════════════════",
+    ],
+    # Frame 7: Rabbit looking right
+    [
+        r"       ╭─────────────────────────────────╮",
+        r"       │                                 │",
+        r"       │   No changes to review!         │",
+        r"       │   Looking for work...           │",
+        r"       │                                 │",
+        r"       ╰─────────────────────────────────╯",
+        r"                    ╱",
+        r"                   ╱",
+        r"              (\__/)    ?",
+        r"              (='.'=)",
+        r"              (\")_(\")",
+        r"         ════════════════",
+    ],
+]
+
+
+def get_no_work_animation_frame(frame_number: int) -> List[str]:
+    """
+    Get a complete animation frame for the "no work" state.
+
+    Shows a rabbit jumping up and down looking for work.
+
+    Args:
+        frame_number: The frame index (0-7, wraps around)
+
+    Returns:
+        List of strings for the complete frame including header and footer
+    """
+    frame_index = frame_number % len(NO_WORK_ANIMATION_FRAMES)
+    rabbit_lines = NO_WORK_ANIMATION_FRAMES[frame_index]
+
+    content: List[str] = [
+        "  \U0001F430 coderabbit",  # rabbit emoji header
+        "",
+    ]
+    content.extend(rabbit_lines)
+    content.append("")
+    content.append("  Press [q] to close")
+
+    return content
+
+
+def get_no_work_frame_count() -> int:
+    """Return the number of frames in the no-work animation."""
+    return len(NO_WORK_ANIMATION_FRAMES)
+
+
+def is_no_files_error(error_message: str) -> bool:
+    """
+    Check if the error message indicates no files to review.
+
+    Args:
+        error_message: The error message from CodeRabbit
+
+    Returns:
+        True if this is a "no files" error, False otherwise
+    """
+    if not error_message:
+        return False
+
+    error_lower = error_message.lower()
+    no_files_indicators = [
+        "no files",
+        "no changes",
+        "nothing to review",
+        "no diff",
+        "failed to start review",
+    ]
+    return any(indicator in error_lower for indicator in no_files_indicators)
