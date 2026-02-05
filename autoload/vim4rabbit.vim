@@ -67,13 +67,13 @@ function! vim4rabbit#Help()
         endif
     endif
 
-    " Calculate 20% of total window height (fixed at 5 lines for compact display)
+    " Calculate 20% of total window height (fixed at 6 lines for compact display)
     let l:height = float2nr(&lines * 0.2)
-    if l:height < 5
-        let l:height = 5
+    if l:height < 6
+        let l:height = 6
     endif
-    if l:height > 5
-        let l:height = 5
+    if l:height > 6
+        let l:height = 6
     endif
 
     " Open a new split at the bottom
@@ -144,11 +144,11 @@ function! vim4rabbit#ResizeHelp()
     endif
 
     let l:height = float2nr(&lines * 0.2)
-    if l:height < 5
-        let l:height = 5
+    if l:height < 6
+        let l:height = 6
     endif
-    if l:height > 5
-        let l:height = 5
+    if l:height > 6
+        let l:height = 6
     endif
 
     let l:cur_winnr = winnr()
@@ -371,7 +371,7 @@ function! s:OnReviewExit(job, exit_status)
         let l:result = py3eval("vim4rabbit.vim_parse_review_output(" . json_encode(l:output) . ")")
         let l:content = py3eval('vim4rabbit.vim_format_review(' .
             \ l:result.success . ', ' .
-            \ string(l:result.issues) . ', ' .
+            \ string(l:result.issues_data) . ', ' .
             \ string(l:result.error_message) . ')')
         " Store issues data for Claude integration
         call s:StoreIssuesData(l:result.issues_data)
@@ -502,13 +502,12 @@ function! vim4rabbit#CleanupReview()
     let s:review_issue_count = 0
 endfunction
 
-" Custom fold text for review issues
+" Custom fold text for review issues - shows type and summary
 function! vim4rabbit#FoldText()
     let l:line = getline(v:foldstart)
-    let l:numlines = v:foldend - v:foldstart + 1
     " Remove the fold marker from display
     let l:line = substitute(l:line, '\s*{{{$', '', '')
-    return l:line . ' (' . l:numlines . ' lines)'
+    return l:line
 endfunction
 
 " Get the issue number at the current cursor position

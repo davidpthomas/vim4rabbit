@@ -74,6 +74,35 @@ class TestFormatReviewOutput:
         assert "Problem 1" in full_text
         assert "Problem 2" in full_text
 
+    def test_fold_header_includes_issue_type(self):
+        """Test that fold header includes issue type in brackets."""
+        issues = [
+            ReviewIssue(
+                lines=["Details here"],
+                issue_type="bug",
+                summary="Null pointer dereference",
+                file_path="src/main.py",
+                line_range="10-20",
+            ),
+        ]
+        result = ReviewResult(success=True, issues=issues)
+        content = format_review_output(result)
+        full_text = "\n".join(content)
+        assert "[bug]" in full_text
+        assert "Null pointer dereference" in full_text
+        assert "(src/main.py:10-20)" in full_text
+
+    def test_fold_header_defaults_issue_type(self):
+        """Test that fold header defaults to 'issue' when type is empty."""
+        issues = [
+            ReviewIssue(lines=["Details"], summary="Some problem"),
+        ]
+        result = ReviewResult(success=True, issues=issues)
+        content = format_review_output(result)
+        full_text = "\n".join(content)
+        assert "[issue]" in full_text
+        assert "Some problem" in full_text
+
     def test_error_result(self):
         """Test error result formatting."""
         result = ReviewResult(success=False, error_message="Command not found: coderabbit")

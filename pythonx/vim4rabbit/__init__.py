@@ -61,17 +61,18 @@ def vim_render_help(width: int) -> List[str]:
 
 def vim_format_review(
     success: bool,
-    issues: list,
+    issues_data: list,
     error_message: str,
 ) -> List[str]:
     """
     Format review results for display.
 
-    Called from VimScript after vim_run_review().
+    Called from VimScript after vim_parse_review_output().
 
     Args:
         success: Whether review succeeded
-        issues: List of issues (each issue is list of line strings)
+        issues_data: List of issue dicts with full metadata (from issues_data),
+                     or list of line-lists for backward compatibility
         error_message: Error message if failed
 
     Returns:
@@ -79,9 +80,24 @@ def vim_format_review(
     """
     from .types import ReviewIssue, ReviewResult
 
+    review_issues = []
+    for item in issues_data:
+        if isinstance(item, dict):
+            review_issues.append(ReviewIssue(
+                lines=item.get("lines", []),
+                file_path=item.get("file_path", ""),
+                line_range=item.get("line_range", ""),
+                issue_type=item.get("issue_type", ""),
+                summary=item.get("summary", ""),
+                prompt=item.get("prompt", ""),
+            ))
+        else:
+            # Backward compatibility: plain list of lines
+            review_issues.append(ReviewIssue(lines=item))
+
     result = ReviewResult(
         success=success,
-        issues=[ReviewIssue(lines=issue) for issue in issues],
+        issues=review_issues,
         error_message=error_message,
     )
 

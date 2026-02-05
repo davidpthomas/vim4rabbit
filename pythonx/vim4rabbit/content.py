@@ -263,8 +263,9 @@ def format_review_output(result: ReviewResult) -> List[str]:
             content.append("")
 
             for i, issue in enumerate(result.issues, 1):
-                # Build fold header with checkbox, number, summary, and location
+                # Build fold header with checkbox, number, type, summary, and location
                 summary = issue.summary or "Issue"
+                issue_type = issue.issue_type or "issue"
                 location = ""
                 if issue.file_path:
                     location = issue.file_path
@@ -273,7 +274,10 @@ def format_review_output(result: ReviewResult) -> List[str]:
                     location = f" ({location})"
 
                 # Fold header line with opening marker
-                fold_header = f"  [ ] {i}. {summary}{location} " + "{{" + "{"
+                fold_header = (
+                    f"  [ ] {i}. [{issue_type}] {summary}{location} "
+                    + "{{" + "{"
+                )
                 content.append(fold_header)
 
                 # Issue content (indented)
