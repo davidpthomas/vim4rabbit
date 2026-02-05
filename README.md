@@ -1,6 +1,6 @@
 # vim4rabbit
 
-A Vim plugin for Software Engineers using CodeRabbit to do code reviews and leverage Claude Code to implement the fixes.  
+A Vim plugin for Software Engineers using CodeRabbit AI to do code reviews and leverage Claude Code AI to implement the suggested fixes.  
 
 No mouse required.
 
