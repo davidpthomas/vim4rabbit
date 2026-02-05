@@ -5,7 +5,7 @@ This module handles subprocess execution of the CodeRabbit CLI.
 """
 
 import subprocess
-from typing import Tuple
+rom typing import Tuple
 
 from .parser import parse_review_issues
 from .types import ReviewResult

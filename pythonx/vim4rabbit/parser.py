@@ -84,11 +84,35 @@ def parse_issue_metadata(lines: List[str]) -> Dict[str, str]:
     return metadata
 
 
+def is_preamble_line(line: str) -> bool:
+    """
+    Check if a line is part of the CLI preamble (status messages to filter out).
+
+    Args:
+        line: A line of text from CLI output
+
+    Returns:
+        True if this line should be filtered out as preamble
+    """
+    preamble_patterns = [
+        "running",
+        "analyzing",
+        "processing",
+        "loading",
+        "fetching",
+        "please wait",
+        "in progress",
+    ]
+    line_lower = line.lower().strip()
+    return any(pattern in line_lower for pattern in preamble_patterns)
+
+
 def parse_review_issues(output: str) -> List[ReviewIssue]:
     """
     Parse review output into separate issues.
 
     Issues are separated by lines containing multiple equal signs (=====).
+    Preamble content (Running/Analyzing status messages) is filtered out.
     Ported from vim4rabbit#ParseReviewIssues().
 
     Args:
@@ -114,9 +138,9 @@ def parse_review_issues(output: str) -> List[ReviewIssue]:
             # Add line to current issue (trim trailing whitespace)
             current_lines.append(line.rstrip())
         else:
-            # Content before first separator - could be header/summary
-            # Start collecting as first issue if non-empty
-            if line.strip():
+            # Content before first separator - filter out preamble
+            # Only start collecting if it's not a preamble line
+            if line.strip() and not is_preamble_line(line):
                 in_issue = True
                 current_lines.append(line.rstrip())
 
