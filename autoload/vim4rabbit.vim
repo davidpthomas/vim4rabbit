@@ -206,6 +206,10 @@ function! vim4rabbit#Review(...)
     setlocal winfixwidth
     setlocal nolist
 
+    " Name the buffer with branch context (instead of default [Scratch])
+    let l:branch = substitute(system('git rev-parse --abbrev-ref HEAD'), '\n', '', '')
+    execute 'silent file ' . fnameescape('Rabbit Review (' . l:branch . ')')
+
     " Show loading message with cancel option
     let l:loading = py3eval('vim4rabbit.vim_get_loading_content()')
     setlocal modifiable
