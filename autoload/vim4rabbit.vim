@@ -680,14 +680,34 @@ function! vim4rabbit#LaunchClaude()
         return
     endif
 
+    " Write prompt to a temp file to avoid OS argument length limits (ARG_MAX)
+    let l:tmpfile = tempname()
+    call writefile(split(l:prompt, "\n", 1), l:tmpfile)
+
     " Open terminal with Claude CLI in a vertical split
-    " Use term_start for better control
     let l:term_opts = {
         \ 'term_name': 'Claude Code',
         \ 'vertical': 1,
         \ 'term_finish': 'close',
         \ }
 
-    " Start the terminal with claude command and prompt
-    call term_start(['claude', l:prompt], l:term_opts)
+    " Start Claude without prompt argument; send via terminal input instead
+    let l:buf = term_start(['claude'], l:term_opts)
+
+    " Send prompt via terminal input after Claude initializes
+    call timer_start(2000, function('s:SendPromptToTerminal', [l:buf, l:tmpfile]))
+endfunction
+
+" Send prompt content from temp file to a running terminal buffer
+function! s:SendPromptToTerminal(buf, tmpfile, timer) abort
+    try
+        if bufexists(a:buf) && term_getstatus(a:buf) =~# 'running'
+            let l:prompt = join(readfile(a:tmpfile), "\n")
+            " Use bracketed paste mode so newlines are treated as literal
+            " text rather than individual Enter keypresses
+            call term_sendkeys(a:buf, "\e[200~" . l:prompt . "\e[201~\r")
+        endif
+    finally
+        call delete(a:tmpfile)
+    endtry
 endfunction
