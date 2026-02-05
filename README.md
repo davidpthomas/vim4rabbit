@@ -247,6 +247,8 @@ A Docker-based development environment is available:
 ./tests/runtests.sh
 ```
 
+The test script runs the full test suite followed by a code coverage report showing per-file statement coverage and any uncovered lines.
+
 ## License
 
 MIT
