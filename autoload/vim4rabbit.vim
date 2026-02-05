@@ -67,13 +67,13 @@ function! vim4rabbit#Help()
         endif
     endif
 
-    " Calculate 20% of total window height (fixed at 5 lines for compact display)
+    " Calculate 20% of total window height (fixed at 6 lines for compact display)
     let l:height = float2nr(&lines * 0.2)
-    if l:height < 5
-        let l:height = 5
+    if l:height < 6
+        let l:height = 6
     endif
-    if l:height > 5
-        let l:height = 5
+    if l:height > 6
+        let l:height = 6
     endif
 
     " Open a new split at the bottom
@@ -144,11 +144,11 @@ function! vim4rabbit#ResizeHelp()
     endif
 
     let l:height = float2nr(&lines * 0.2)
-    if l:height < 5
-        let l:height = 5
+    if l:height < 6
+        let l:height = 6
     endif
-    if l:height > 5
-        let l:height = 5
+    if l:height > 6
+        let l:height = 6
     endif
 
     let l:cur_winnr = winnr()
@@ -222,6 +222,9 @@ function! vim4rabbit#Review(...)
     nnoremap <buffer> <silent> <Space> :call vim4rabbit#ToggleIssueSelection()<CR>
     nnoremap <buffer> <silent> <leader>a :call vim4rabbit#SelectAllIssues()<CR>
     nnoremap <buffer> <silent> <leader>n :call vim4rabbit#DeselectAllIssues()<CR>
+
+    " Claude integration
+    nnoremap <buffer> <silent> <leader>c :call vim4rabbit#LaunchClaude()<CR>
 
     " Clean up when buffer is wiped
     autocmd BufWipeout <buffer> call vim4rabbit#CleanupReview()
@@ -368,12 +371,31 @@ function! s:OnReviewExit(job, exit_status)
         let l:result = py3eval("vim4rabbit.vim_parse_review_output(" . json_encode(l:output) . ")")
         let l:content = py3eval('vim4rabbit.vim_format_review(' .
             \ l:result.success . ', ' .
-            \ string(l:result.issues) . ', ' .
+            \ string(l:result.issues_data) . ', ' .
             \ string(l:result.error_message) . ')')
+        " Store issues data for Claude integration
+        call s:StoreIssuesData(l:result.issues_data)
     endif
 
     " Update buffer content
     call s:UpdateReviewBuffer(l:content)
+endfunction
+
+" Store issues data in buffer-local variable for Claude integration
+function! s:StoreIssuesData(issues_data)
+    if s:review_bufnr == -1 || !bufexists(s:review_bufnr)
+        return
+    endif
+
+    let l:winnr = bufwinnr(s:review_bufnr)
+    if l:winnr == -1
+        return
+    endif
+
+    let l:cur_winnr = winnr()
+    execute l:winnr . 'wincmd w'
+    let b:vim4rabbit_issues = a:issues_data
+    execute l:cur_winnr . 'wincmd w'
 endfunction
 
 " Cancel the running review and close buffer
@@ -480,13 +502,12 @@ function! vim4rabbit#CleanupReview()
     let s:review_issue_count = 0
 endfunction
 
-" Custom fold text for review issues
+" Custom fold text for review issues - shows type and summary
 function! vim4rabbit#FoldText()
     let l:line = getline(v:foldstart)
-    let l:numlines = v:foldend - v:foldstart + 1
     " Remove the fold marker from display
     let l:line = substitute(l:line, '\s*{{{$', '', '')
-    return l:line . ' (' . l:numlines . ' lines)'
+    return l:line
 endfunction
 
 " Get the issue number at the current cursor position
@@ -632,4 +653,60 @@ function! vim4rabbit#ApplySelectedFixes()
     endif
 
     echo "Selected issues: " . join(l:selected, ', ') . " (AI fix not yet implemented)"
+endfunction
+
+" Launch Claude Code CLI with selected issues
+function! vim4rabbit#LaunchClaude()
+    let l:selected = vim4rabbit#GetSelectedIssues()
+    if empty(l:selected)
+        echo "No issues selected. Use Space to select issues."
+        return
+    endif
+
+    " Check if issues data is available
+    if !exists('b:vim4rabbit_issues') || empty(b:vim4rabbit_issues)
+        echo "No issue data available. Please run a review first."
+        return
+    endif
+
+    " Build the prompt via Python
+    let l:prompt = py3eval('vim4rabbit.vim_build_claude_prompt(' .
+        \ string(l:selected) . ', ' .
+        \ json_encode(b:vim4rabbit_issues) . ')')
+
+    if empty(l:prompt)
+        echo "Could not build prompt for selected issues."
+        return
+    endif
+
+    " Write prompt to a temp file to avoid OS argument length limits (ARG_MAX)
+    let l:tmpfile = tempname()
+    call writefile(split(l:prompt, "\n", 1), l:tmpfile)
+
+    " Open terminal with Claude CLI in a vertical split
+    let l:term_opts = {
+        \ 'term_name': 'Claude Code',
+        \ 'vertical': 1,
+        \ 'term_finish': 'close',
+        \ }
+
+    " Start Claude without prompt argument; send via terminal input instead
+    let l:buf = term_start(['claude'], l:term_opts)
+
+    " Send prompt via terminal input after Claude initializes
+    call timer_start(2000, function('s:SendPromptToTerminal', [l:buf, l:tmpfile]))
+endfunction
+
+" Send prompt content from temp file to a running terminal buffer
+function! s:SendPromptToTerminal(buf, tmpfile, timer) abort
+    try
+        if bufexists(a:buf) && term_getstatus(a:buf) =~# 'running'
+            let l:prompt = join(readfile(a:tmpfile), "\n")
+            " Use bracketed paste mode so newlines are treated as literal
+            " text rather than individual Enter keypresses
+            call term_sendkeys(a:buf, "\e[200~" . l:prompt . "\e[201~\r")
+        endif
+    finally
+        call delete(a:tmpfile)
+    endtry
 endfunction

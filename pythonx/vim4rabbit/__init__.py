@@ -61,17 +61,18 @@ def vim_render_help(width: int) -> List[str]:
 
 def vim_format_review(
     success: bool,
-    issues: list,
+    issues_data: list,
     error_message: str,
 ) -> List[str]:
     """
     Format review results for display.
 
-    Called from VimScript after vim_run_review().
+    Called from VimScript after vim_parse_review_output().
 
     Args:
         success: Whether review succeeded
-        issues: List of issues (each issue is list of line strings)
+        issues_data: List of issue dicts with full metadata (from issues_data),
+                     or list of line-lists for backward compatibility
         error_message: Error message if failed
 
     Returns:
@@ -79,9 +80,24 @@ def vim_format_review(
     """
     from .types import ReviewIssue, ReviewResult
 
+    review_issues = []
+    for item in issues_data:
+        if isinstance(item, dict):
+            review_issues.append(ReviewIssue(
+                lines=item.get("lines", []),
+                file_path=item.get("file_path", ""),
+                line_range=item.get("line_range", ""),
+                issue_type=item.get("issue_type", ""),
+                summary=item.get("summary", ""),
+                prompt=item.get("prompt", ""),
+            ))
+        else:
+            # Backward compatibility: plain list of lines
+            review_issues.append(ReviewIssue(lines=item))
+
     result = ReviewResult(
         success=success,
-        issues=[ReviewIssue(lines=issue) for issue in issues],
+        issues=review_issues,
         error_message=error_message,
     )
 
@@ -182,6 +198,7 @@ def vim_parse_review_output(output: str) -> dict:
         Dict with keys:
         - success: bool
         - issues: list of lists (each issue is a list of line strings)
+        - issues_data: list of dicts with full issue metadata
         - error_message: str (empty if success)
     """
     from .types import ReviewResult
@@ -193,6 +210,58 @@ def vim_parse_review_output(output: str) -> dict:
         raw_output=output,
     )
     return result.to_dict()
+
+
+def vim_build_claude_prompt(selected_indices: List[int], issues_data: List[dict]) -> str:
+    """
+    Build a combined prompt for Claude from selected issues.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_build_claude_prompt(...)')
+
+    Args:
+        selected_indices: List of 1-based issue numbers that are selected
+        issues_data: List of issue dicts with full metadata (from issues_data)
+
+    Returns:
+        Combined prompt string for Claude CLI
+    """
+    if not selected_indices or not issues_data:
+        return ""
+
+    prompts: List[str] = []
+
+    for idx in selected_indices:
+        # Convert 1-based index to 0-based
+        issue_idx = idx - 1
+        if 0 <= issue_idx < len(issues_data):
+            issue = issues_data[issue_idx]
+            prompt = issue.get("prompt", "")
+            file_path = issue.get("file_path", "")
+            line_range = issue.get("line_range", "")
+            summary = issue.get("summary", "")
+
+            if prompt:
+                # Use the AI prompt from CodeRabbit
+                prompts.append(prompt)
+            elif file_path:
+                # Fallback: build a prompt from metadata
+                location = file_path
+                if line_range:
+                    location += f":{line_range}"
+                prompts.append(f"Fix the issue in {location}: {summary}")
+
+    if not prompts:
+        return ""
+
+    # Combine prompts with clear separation
+    if len(prompts) == 1:
+        return prompts[0]
+
+    combined = "Please address the following code review issues:\n\n"
+    for i, prompt in enumerate(prompts, 1):
+        combined += f"## Issue {i}\n{prompt}\n\n"
+
+    return combined.strip()
 
 
 # =============================================================================
