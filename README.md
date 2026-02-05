@@ -17,7 +17,7 @@ A Vim plugin for running CodeRabbit code reviews directly in Vim and leveraging 
 
 | Review In Progress | Issues Found | Full Workflow |
 |:--:|:--:|:--:|
-| <a href="doc/assets/coderabbit_review_in_progress.png"><img src="doc/assets/coderabbit_review_in_progress.png" width="320" alt="CodeRabbit review in progress"></a> | <a href="doc/assets/coderabbit_issue_found.png"><img src="doc/assets/coderabbit_issue_found.png" width="320" alt="CodeRabbit issues found"></a> | <a href="doc/assets/vim_coderabbit_claude.png"><img src="doc/assets/vim_coderabbit_claude.png" width="320" alt="Vim with CodeRabbit review and Claude Code"></a> |
+| <a href="doc/assets/coderabbit_review_in_progress.png"><img src="doc/assets/coderabbit_review_in_progress.png" width="320" alt="CodeRabbit review in progress"></a> | <a href="doc/assets/coderabbit_issues_found.png"><img src="doc/assets/coderabbit_issues_found.png" width="320" alt="CodeRabbit issues found"></a> | <a href="doc/assets/vim_coderabbit_claude.png"><img src="doc/assets/vim_coderabbit_claude.png" width="320" alt="Vim with CodeRabbit review and Claude Code"></a> |
 | Animated rabbit loading indicator with elapsed timer while a CodeRabbit review runs. | CodeRabbit review results with selectable issues and collapsible folds. | Source code, CodeRabbit review results with selectable issues, and Claude Code applying fixes side by side. |
 
 ## Installation
