@@ -1,4 +1,4 @@
-*vim4rabbit.txt*  A Vim plugin powered by Python
+*vim4rabbit.txt*  A Vim plugin for CodeRabbit code reviews
 
 ==============================================================================
 CONTENTS                                                   *vim4rabbit-contents*
@@ -6,43 +6,83 @@ CONTENTS                                                   *vim4rabbit-contents*
     1. Introduction .......................... |vim4rabbit-introduction|
     2. Commands .............................. |vim4rabbit-commands|
     3. Help Screen ........................... |vim4rabbit-help|
+    4. Review Panel .......................... |vim4rabbit-review|
+    5. Claude Integration .................... |vim4rabbit-claude|
 
 ==============================================================================
 1. Introduction                                        *vim4rabbit-introduction*
 
 vim4rabbit is a Vim plugin with a Python backend that integrates CodeRabbit
-AI code review directly into Vim.
+AI code review directly into Vim. It supports reviewing uncommitted, committed,
+or all changes, displays results with collapsible folds, and optionally sends
+selected issues to Claude Code for AI-powered fixes.
 
 ==============================================================================
 2. Commands                                               *vim4rabbit-commands*
 
-                                                                           *:CR*
-:CR                     Open a new horizontal buffer window with a message.
-
                                                                        *:Rabbit*
-:Rabbit {subcommand}    Execute a rabbit subcommand.
+:Rabbit                 Open the help screen (default).
 
-Available subcommands:
-    help                Open the help screen showing available commands.
+:Rabbit help            Open the help screen.
+
+:Rabbit review          Review uncommitted changes.
+
+:Rabbit review uncommitted
+                        Review uncommitted changes.
+
+:Rabbit review committed
+                        Review committed changes.
+
+:Rabbit review all      Review all changes (committed + uncommitted).
 
 ==============================================================================
 3. Help Screen                                               *vim4rabbit-help*
 
 The help screen provides quick access to vim4rabbit commands. It opens in a
-horizontal split at the bottom of the screen, taking up 20% of the window
-height.
+horizontal split at the bottom of the screen (6 lines).
 
 To open the help screen: >
     :Rabbit help
 <
                                                        *vim4rabbit-help-commands*
-Available commands in the help screen:
+Available keybindings in the help screen:
 
-    r       Review code with CodeRabbit (coming soon)
-    q       Quit the help screen
+    ru      Close help and review uncommitted changes
+    rc      Close help and review committed changes
+    ra      Close help and review all changes
+    q       Close the help screen
 
-The help screen automatically resizes when the Vim window is resized to
-maintain its 20% height proportion.
+The help screen automatically resizes when the Vim window is resized.
+
+==============================================================================
+4. Review Panel                                           *vim4rabbit-review*
+
+The review panel opens in a vertical split on the right side of the screen.
+An animated rabbit loading indicator with elapsed time is displayed while the
+review runs. Results are shown with collapsible Vim folds and checkboxes for
+issue selection.
+
+                                                    *vim4rabbit-review-keybindings*
+Available keybindings in the review panel:
+
+    q           Close the panel
+    c           Cancel the running review (while loading)
+    <CR> / za   Toggle fold on current issue
+    zM          Close all folds
+    zR          Open all folds
+    <Space>     Toggle issue selection (checkbox)
+    \a          Select all issues
+    \n          Deselect all issues
+    \c          Launch Claude Code with selected issues
+
+==============================================================================
+5. Claude Integration                                     *vim4rabbit-claude*
+
+After a review completes, select one or more issues using <Space> to toggle
+checkboxes. Then press \c to launch Claude Code in a Vim terminal split.
+The selected issue prompts are passed to Claude for AI-powered resolution.
+
+Use \a to select all issues and \n to deselect all.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:
