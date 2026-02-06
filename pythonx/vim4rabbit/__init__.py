@@ -19,7 +19,6 @@ from .content import (
     get_no_work_animation_frame,
     get_no_work_frame_count,
     is_no_files_error,
-    render_help,
 )
 from .games import (
     get_game_menu,
@@ -52,21 +51,6 @@ def vim_run_review() -> dict:
     """
     result = run_review()
     return result.to_dict()
-
-
-def vim_render_help(width: int) -> List[str]:
-    """
-    Render help content for the given window width.
-
-    Called from VimScript: py3eval('vim4rabbit.vim_render_help(' . winwidth(0) . ')')
-
-    Args:
-        width: Window width in characters
-
-    Returns:
-        List of strings (lines) for the help buffer
-    """
-    return render_help(width)
 
 
 def vim_format_review(

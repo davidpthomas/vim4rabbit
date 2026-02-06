@@ -2,7 +2,6 @@
 
 import pytest
 from vim4rabbit.content import (
-    render_help,
     format_review_output,
     format_loading_message,
     format_cancelled_message,
@@ -14,39 +13,6 @@ from vim4rabbit.content import (
     NO_WORK_ANIMATION_FRAMES,
 )
 from vim4rabbit.types import ReviewResult, ReviewIssue
-
-
-class TestRenderHelp:
-    """Tests for render_help function."""
-
-    def test_basic_structure(self):
-        """Test basic help content structure."""
-        content = render_help(80)
-        assert len(content) >= 4  # Header, blank, commands, quit line
-        assert "vim4rabbit Help" in content[0]
-
-    def test_contains_review_command(self):
-        """Test that help contains review command."""
-        content = render_help(80)
-        # Join all lines to search
-        full_text = "\n".join(content)
-        assert "[ru] Review Uncommitted" in full_text
-
-    def test_contains_quit_command(self):
-        """Test that help contains quit command."""
-        content = render_help(80)
-        full_text = "\n".join(content)
-        assert "[q] Quit" in full_text
-
-    def test_width_affects_layout(self):
-        """Test that different widths produce different layouts."""
-        narrow = render_help(40)
-        wide = render_help(120)
-        # Quit line should be positioned differently
-        narrow_quit = narrow[-1]
-        wide_quit = wide[-1]
-        # Wide version should have more padding
-        assert len(wide_quit) > len(narrow_quit) or wide_quit.count(" ") > narrow_quit.count(" ")
 
 
 class TestFormatReviewOutput:

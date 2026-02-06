@@ -13,7 +13,6 @@ No mouse required.
 - Collapsible issue display using Vim folds
 - Claude Code CLI integration to send selected issues for AI-powered fixes
 - "No changes to review" jumping rabbit animation
-- Help system with keybinding reference
 
 ### Developer Happiness
 
@@ -35,20 +34,13 @@ NOTE: Currently under review for public usage circa 2026/02/05
 
 | Command | Description |
 |---------|-------------|
-| `:Rabbit` | Open the help panel (default) |
-| `:Rabbit help` | Open the help panel |
+| `:Rabbit` | Run CodeRabbit review on uncommitted changes (default) |
 | `:Rabbit review` | Run CodeRabbit review on uncommitted changes |
 | `:Rabbit review uncommitted` | Run CodeRabbit review on uncommitted changes |
 | `:Rabbit review committed` | Run CodeRabbit review on committed changes |
 | `:Rabbit review all` | Run CodeRabbit review on all changes (committed + uncommitted) |
 
 ### Keybindings
-
-In the help panel:
-- `q` - Close the panel
-- `ru` - Close help and run review on uncommitted changes
-- `rc` - Close help and run review on committed changes
-- `ra` - Close help and run review on all changes
 
 In the review panel:
 - `q` - Close the panel
@@ -140,7 +132,7 @@ vim4rabbit uses a layered architecture separating UI (VimScript) from business l
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         Vim Editor                              │
-│  :Rabbit review  :Rabbit help                                   │
+│  :Rabbit review                                                  │
 └──────────────────────────┬──────────────────────────────────────┘
                            │
                            ▼
