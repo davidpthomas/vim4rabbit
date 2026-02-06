@@ -10,6 +10,7 @@ from typing import List, Optional
 from .zen_spiral import ZenSpiral
 from .coffee_cup import CoffeeCup
 from .snake import Snake
+from .pong import Pong
 
 # Module-level state
 _active_game = None  # type: Optional[object]
@@ -19,6 +20,7 @@ GAME_REGISTRY = {
     "z": ("Zen Spiral", ZenSpiral, 500),
     "e": ("Coffee from Uganda", CoffeeCup, 1040),
     "s": ("Snake", Snake, 200),
+    "p": ("Pong", Pong, 100),
 }
 
 
@@ -34,6 +36,7 @@ def get_game_menu() -> List[str]:
         "   ║   [z]  Zen Spiral             ║",
         "   ║   [e]  Coffee from Uganda      ║",
         "   ║   [s]  Snake                  ║",
+        "   ║   [p]  Pong                   ║",
         "   ║                               ║",
         "   ║   Press key to start game     ║",
         "   ║   [c] to go back              ║",

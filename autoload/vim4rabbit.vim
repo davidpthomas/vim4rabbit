@@ -853,6 +853,7 @@ function! vim4rabbit#ShowGameMenu()
     nnoremap <buffer> <silent> z :call vim4rabbit#StartGame('z')<CR>
     nnoremap <buffer> <silent> e :call vim4rabbit#StartGame('e')<CR>
     nnoremap <buffer> <silent> s :call vim4rabbit#StartGame('s')<CR>
+    nnoremap <buffer> <silent> p :call vim4rabbit#StartGame('p')<CR>
     nnoremap <buffer> <silent> c :call vim4rabbit#CancelGame()<CR>
 
     " Remove 'p' from review buffer while game buffer is open
@@ -898,6 +899,7 @@ function! vim4rabbit#StartGame(key)
     silent! nunmap <buffer> z
     silent! nunmap <buffer> e
     silent! nunmap <buffer> s
+    silent! nunmap <buffer> p
 
     " Set up game keymaps — 'c' means cancel/go-back
     nnoremap <buffer> <silent> c :call vim4rabbit#CancelGame()<CR>
@@ -908,6 +910,12 @@ function! vim4rabbit#StartGame(key)
         nnoremap <buffer> <silent> j :call vim4rabbit#GameInput('j')<CR>
         nnoremap <buffer> <silent> k :call vim4rabbit#GameInput('k')<CR>
         nnoremap <buffer> <silent> l :call vim4rabbit#GameInput('l')<CR>
+    endif
+
+    " Pong-specific keymaps (j/k for paddle)
+    if a:key ==# 'p'
+        nnoremap <buffer> <silent> j :call vim4rabbit#GameInput('j')<CR>
+        nnoremap <buffer> <silent> k :call vim4rabbit#GameInput('k')<CR>
     endif
 
     " Render first frame
