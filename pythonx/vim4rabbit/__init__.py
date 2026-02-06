@@ -21,6 +21,15 @@ from .content import (
     is_no_files_error,
     render_help,
 )
+from .games import (
+    get_game_menu,
+    get_tick_rate,
+    input_game,
+    is_game_active,
+    start_game,
+    stop_game,
+    tick_game,
+)
 from .parser import parse_review_issues
 
 
@@ -276,3 +285,64 @@ def vim_build_claude_prompt(selected_indices: List[int], issues_data: List[dict]
 def get_message() -> str:
     """Return the iconic message (kept for backward compatibility)."""
     return "All your vim are belong to us."
+
+
+# =============================================================================
+# Game API for VimScript (vim_* functions)
+# =============================================================================
+
+
+def vim_get_game_menu() -> List[str]:
+    """
+    Get the game selection menu.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_get_game_menu()')
+    """
+    return get_game_menu()
+
+
+def vim_start_game(key: str, width: int, height: int) -> int:
+    """
+    Start a game by key. Returns tick rate in ms, or 0 if invalid key.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_start_game(key, w, h)')
+    """
+    if start_game(key, width, height):
+        return get_tick_rate(key)
+    return 0
+
+
+def vim_stop_game() -> None:
+    """
+    Stop the active game.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_stop_game()')
+    """
+    stop_game()
+
+
+def vim_is_game_active() -> bool:
+    """
+    Check if a game is active.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_is_game_active()')
+    """
+    return is_game_active()
+
+
+def vim_tick_game() -> List[str]:
+    """
+    Advance game one tick and return frame.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_tick_game()')
+    """
+    return tick_game()
+
+
+def vim_input_game(key: str) -> List[str]:
+    """
+    Handle game input and return frame.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_input_game(key)')
+    """
+    return input_game(key)
