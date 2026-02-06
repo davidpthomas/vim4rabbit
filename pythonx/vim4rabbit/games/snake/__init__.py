@@ -134,7 +134,7 @@ class Snake:
         lines = ["".join(row) for row in grid]
         lines.append("")
         lines.append(
-            f"  Snake  |  Score: {self.score}  |  h/j/k/l to move  |  [c] back"
+            f"  Snake  |  Score: {self.score}  |  h/j/k/l to move  |  [c] cancel"
         )
         return lines
 
@@ -155,6 +155,6 @@ class Snake:
         lines.append("        ║      GAME OVER!       ║")
         lines.append(f"        ║     Score: {self.score:<10} ║")
         lines.append("        ║                       ║")
-        lines.append("        ║   [c] back to loading ║")
+        lines.append("        ║   [c] cancel          ║")
         lines.append("        ╚═══════════════════════╝")
         return lines

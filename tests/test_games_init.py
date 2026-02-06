@@ -25,15 +25,16 @@ class TestGetGameMenu:
         lines = get_game_menu()
         full_text = "\n".join(lines)
         assert "Zen Spiral" in full_text
-        assert "Coffee Cup" in full_text
+        assert "Coffee from Uganda" in full_text
         assert "Snake" in full_text
 
     def test_contains_key_hints(self):
         lines = get_game_menu()
         full_text = "\n".join(lines)
         assert "[z]" in full_text
-        assert "[c]" in full_text
+        assert "[e]" in full_text
         assert "[s]" in full_text
+        assert "[c] to go back" in full_text
 
 
 class TestStartStopGame:
@@ -76,7 +77,7 @@ class TestGetTickRate:
         assert get_tick_rate("z") == 500
 
     def test_coffee_cup_rate(self):
-        assert get_tick_rate("c") == 500
+        assert get_tick_rate("e") == 1040
 
     def test_snake_rate(self):
         assert get_tick_rate("s") == 200
@@ -136,7 +137,7 @@ class TestGameRegistry:
 
     def test_all_keys_present(self):
         assert "z" in GAME_REGISTRY
-        assert "c" in GAME_REGISTRY
+        assert "e" in GAME_REGISTRY
         assert "s" in GAME_REGISTRY
 
     def test_registry_structure(self):

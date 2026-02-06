@@ -19,7 +19,7 @@ class TestCoffeeCupInit:
 
     def test_initial_state(self):
         game = CoffeeCup(40, 20)
-        assert game.fill_level == 0
+        assert game.fill_level == game.interior_rows
         assert game.steam_ticks == 0
         assert game.is_game_over() is False
 
@@ -27,45 +27,45 @@ class TestCoffeeCupInit:
 class TestCoffeeCupTick:
     """Tests for CoffeeCup.tick method."""
 
-    def test_tick_fills_one_row(self):
+    def test_tick_drains_one_row(self):
         game = CoffeeCup(40, 20)
         game.tick()
-        assert game.fill_level == 1
+        assert game.fill_level == game.interior_rows - 1
 
-    def test_fills_incrementally(self):
+    def test_drains_incrementally(self):
         game = CoffeeCup(40, 20)
         for i in range(1, 5):
             game.tick()
-            assert game.fill_level == i
+            assert game.fill_level == game.interior_rows - i
 
-    def test_starts_steam_when_full(self):
+    def test_refills_and_steams_when_empty(self):
         game = CoffeeCup(40, 20)
-        # Fill all rows
+        # Drain all rows
         for _ in range(game.interior_rows):
             game.tick()
         assert game.fill_level == game.interior_rows
-        # One more tick starts steam
-        game.tick()
         assert game.steam_ticks == 1
 
     def test_steam_advances(self):
         game = CoffeeCup(40, 20)
         for _ in range(game.interior_rows):
             game.tick()
-        game.tick()  # steam_ticks = 1
+        # steam_ticks = 1, tick again
         game.tick()  # steam_ticks = 2
         assert game.steam_ticks == 2
 
     def test_resets_after_steam(self):
         game = CoffeeCup(40, 20)
-        # Fill up
+        # Drain completely
         for _ in range(game.interior_rows):
             game.tick()
-        # Trigger steam and wait for it to finish
-        for _ in range(game.steam_max + 1):
+        # Now full again with steam; wait for steam to finish
+        for _ in range(game.steam_max):
             game.tick()
-        assert game.fill_level == 0
         assert game.steam_ticks == 0
+        # Next tick should drain
+        game.tick()
+        assert game.fill_level == game.interior_rows - 1
 
 
 class TestCoffeeCupGetFrame:
@@ -87,40 +87,43 @@ class TestCoffeeCupGetFrame:
     def test_frame_has_status_line(self):
         game = CoffeeCup(40, 20)
         frame = game.get_frame()
-        assert "Coffee Cup" in frame[-1]
+        assert "Coffee from Uganda" in frame[-1]
         assert "[c]" in frame[-1]
 
-    def test_empty_cup_has_empty_interior(self):
+    def test_full_cup_has_filled_interior(self):
         game = CoffeeCup(40, 20)
         frame = game.get_frame()
-        # Find interior rows (between rim and base)
-        for line in frame:
-            if line.startswith("    |") and line.endswith("|"):
-                interior = line[5:-1]
-                assert interior.strip() == ""
-
-    def test_filled_rows_have_fill_chars(self):
-        game = CoffeeCup(40, 20)
-        game.tick()
-        game.tick()
-        frame = game.get_frame()
-        # Find interior rows with fill
         filled_rows = []
         for line in frame:
-            if line.startswith("    |") and line.endswith("|"):
-                interior = line[5:-1]
+            stripped = line.strip()
+            if stripped.startswith("|") and stripped.endswith("|"):
+                interior = stripped[1:-1]
                 if interior.strip():
                     filled_rows.append(interior)
-        assert len(filled_rows) == 2
+        assert len(filled_rows) == game.interior_rows
 
-    def test_steam_frame_shows_yummm(self):
+    def test_drained_rows_are_empty(self):
+        game = CoffeeCup(40, 20)
+        game.tick()
+        game.tick()
+        frame = game.get_frame()
+        empty_rows = []
+        for line in frame:
+            stripped = line.strip()
+            if stripped.startswith("|") and stripped.endswith("|"):
+                interior = stripped[1:-1]
+                if not interior.strip():
+                    empty_rows.append(interior)
+        assert len(empty_rows) == 2
+
+    def test_steam_frame_shows_sip(self):
         game = CoffeeCup(40, 20)
         for _ in range(game.interior_rows):
             game.tick()
-        game.tick()  # start steam
+        # Now full with steam
         frame = game.get_frame()
         full_text = "\n".join(frame)
-        assert "Yummm!!!" in full_text
+        assert "*sip*" in full_text
 
 
 class TestCoffeeCupHandleInput:

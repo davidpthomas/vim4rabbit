@@ -1,8 +1,8 @@
 """
-Coffee Cup game - ASCII coffee cup filling animation.
+Espresso game - ASCII cup draining animation.
 
-Static cup outline with fillable interior that fills one row
-from bottom per tick. When full, shows steam and "Yummm!!!" then resets.
+Static cup outline that starts full and drains one row from top per tick.
+When empty, refills and shows steam before draining again.
 """
 
 import random
@@ -19,96 +19,101 @@ CUP_WIDTH = 20  # interior width
 
 
 class CoffeeCup:
-    """ASCII coffee cup that fills up."""
+    """ASCII cup that drains."""
 
     def __init__(self, width: int, height: int) -> None:
         self.width = max(width, 30)
         self.height = max(height, 15)
         self.interior_rows = 8
-        self.fill_level = 0  # rows filled from bottom
-        self.steam_ticks = 0  # ticks showing steam after full
+        self.fill_level = self.interior_rows  # starts full
+        self.steam_ticks = 0  # ticks showing steam before draining
         self.steam_max = 6
         self._game_over = False
+        self._fresh = True  # show steam on first cycle
 
     def tick(self) -> None:
-        """Fill one more row or show steam."""
+        """Drain one row or show steam."""
+        # Show steam while cup is full
         if self.steam_ticks > 0:
             self.steam_ticks += 1
             if self.steam_ticks > self.steam_max:
-                # Reset
-                self.fill_level = 0
                 self.steam_ticks = 0
             return
 
-        if self.fill_level < self.interior_rows:
-            self.fill_level += 1
+        if self.fill_level > 0:
+            self.fill_level -= 1
         else:
-            # Cup is full, start steam
+            # Cup is empty - refill and start steam
+            self.fill_level = self.interior_rows
             self.steam_ticks = 1
 
     def handle_input(self, key: str) -> None:
-        """No-op: coffee cup is non-interactive."""
+        """No-op: espresso is non-interactive."""
         pass
 
     def _make_fill_row(self) -> str:
         """Generate a random fill row."""
         return "".join(random.choice(FILL_CHARS) for _ in range(CUP_WIDTH))
 
+    def _pad(self, text: str) -> str:
+        """Center text within buffer width."""
+        pad = max((self.width - len(text)) // 2, 0)
+        return " " * pad + text
+
     def get_frame(self) -> List[str]:
-        """Render the coffee cup."""
+        """Render the coffee cup centered in the buffer."""
         lines: List[str] = []
 
-        # Steam (only when full)
+        rim = ".---" + "-" * CUP_WIDTH + "---."
+        base = "'---" + "-" * CUP_WIDTH + "---'"
+        bottom = "\\" + "_" * (CUP_WIDTH - 2) + "/"
+
+        # Steam (while cup is full)
         if self.steam_ticks > 0:
             steam_patterns = [
-                "       ~~  ~~  ~~",
-                "      ~~  ~~  ~~",
-                "       ~~  ~~  ~~",
+                "~~  ~~  ~~",
+                " ~~  ~~  ~~",
+                "~~  ~~  ~~",
             ]
             tick_offset = self.steam_ticks % 2
             for i, s in enumerate(steam_patterns):
                 if (i + tick_offset) % 2 == 0:
-                    lines.append(s)
+                    lines.append(self._pad(s))
                 else:
-                    lines.append(s.replace("~~", " ~"))
+                    lines.append(self._pad(s.replace("~~", " ~")))
             lines.append("")
-            lines.append("        Yummm!!!")
+            lines.append(self._pad("*sip*"))
             lines.append("")
         else:
             # Blank lines above cup for spacing
-            lines.append("")
-            lines.append("")
-            lines.append("")
-            lines.append("")
-            lines.append("")
-            lines.append("")
+            for _ in range(6):
+                lines.append("")
 
         # Cup rim
-        lines.append("    .---" + "-" * CUP_WIDTH + "---.")
+        lines.append(self._pad(rim))
 
         # Cup body - rows from top to bottom
+        # fill_level rows are filled from the bottom
         for row_idx in range(self.interior_rows):
-            # row_idx 0 = top, interior_rows-1 = bottom
-            # fill_level rows from bottom are filled
-            fill_start = self.interior_rows - self.fill_level
-            if row_idx >= fill_start:
-                interior = self._make_fill_row()
-            else:
+            empty_rows = self.interior_rows - self.fill_level
+            if row_idx < empty_rows:
                 interior = " " * CUP_WIDTH
-            lines.append(CUP_LEFT + interior + CUP_RIGHT)
+            else:
+                interior = self._make_fill_row()
+            lines.append(self._pad("|" + interior + "|"))
 
         # Cup base
-        lines.append("    '---" + "-" * CUP_WIDTH + "---'")
-        lines.append("       \\" + "_" * (CUP_WIDTH - 2) + "/")
+        lines.append(self._pad(base))
+        lines.append(self._pad(bottom))
 
         lines.append("")
-        lines.append("  Coffee Cup  |  [c] back to loading")
+        lines.append("  Coffee from Uganda  |  [c] cancel")
         return lines
 
     def is_game_over(self) -> bool:
-        """Coffee cup never ends."""
+        """Espresso never ends."""
         return self._game_over
 
     def get_game_over_frame(self) -> List[str]:
-        """Not used for coffee cup."""
+        """Not used for espresso."""
         return self.get_frame()

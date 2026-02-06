@@ -201,7 +201,7 @@ def get_animation_frame(frame_number: int, elapsed_secs: int = 0) -> List[str]:
     ]
     content.extend(rabbit_lines)
     content.append("")
-    content.append("  Press [c] to cancel")
+    content.append("  [p] play  |  [c] cancel")
 
     return content
 
@@ -331,7 +331,7 @@ def format_loading_message() -> List[str]:
         "",
         "  Running coderabbit...",
         "",
-        "  Press [c] to cancel",
+        "  [p] play  |  [c] cancel",
     ]
 
 

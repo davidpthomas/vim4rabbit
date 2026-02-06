@@ -33,6 +33,7 @@ let s:no_work_frame_count = 8
 let s:game_timer = v:null
 let s:game_active = 0
 let s:game_mode = ''
+let s:game_bufnr = -1
 
 " Main Rabbit command dispatcher
 function! vim4rabbit#Rabbit(subcmd)
@@ -372,6 +373,11 @@ function! s:OnReviewExit(job, exit_status)
     call s:StopSpinner()
     call s:StopGame()
 
+    " Close game buffer if it exists
+    if s:game_bufnr != -1 && bufexists(s:game_bufnr)
+        execute 'bwipeout ' . s:game_bufnr
+    endif
+
     " Clear the job reference
     let s:review_job = v:null
 
@@ -429,6 +435,11 @@ function! vim4rabbit#CancelReview()
     " Stop the spinner and any active game
     call s:StopSpinner()
     call s:StopGame()
+
+    " Close game buffer first
+    if s:game_bufnr != -1 && bufexists(s:game_bufnr)
+        execute 'bwipeout ' . s:game_bufnr
+    endif
 
     if s:review_job != v:null && job_status(s:review_job) ==# 'run'
         call job_stop(s:review_job, 'kill')
@@ -501,6 +512,11 @@ function! vim4rabbit#CloseReview()
     " Stop any active game
     call s:StopGame()
 
+    " Close game buffer first
+    if s:game_bufnr != -1 && bufexists(s:game_bufnr)
+        execute 'bwipeout ' . s:game_bufnr
+    endif
+
     " Stop the no-work animation
     call s:StopNoWorkAnimation()
 
@@ -522,6 +538,11 @@ function! vim4rabbit#CleanupReview()
 
     " Stop any active game
     call s:StopGame()
+
+    " Close game buffer if it exists
+    if s:game_bufnr != -1 && bufexists(s:game_bufnr)
+        execute 'bwipeout ' . s:game_bufnr
+    endif
 
     " Stop the no-work animation
     call s:StopNoWorkAnimation()
@@ -748,55 +769,116 @@ endfunction
 " Game functions
 " =========================================================================
 
+" Create a new game buffer below the review buffer
+function! s:CreateGameBuffer()
+    " Focus the review buffer first so split goes below it
+    let l:winnr = bufwinnr(s:review_bufnr)
+    if l:winnr == -1
+        return -1
+    endif
+
+    let l:cur_winnr = winnr()
+    execute l:winnr . 'wincmd w'
+
+    " Open a horizontal split below the review buffer
+    belowright new
+
+    let s:game_bufnr = bufnr('%')
+
+    " Set buffer options
+    setlocal buftype=nofile
+    setlocal bufhidden=wipe
+    setlocal noswapfile
+    setlocal nobuflisted
+    setlocal filetype=vim4rabbit
+    setlocal nocursorline
+    setlocal nocursorcolumn
+    setlocal nonumber
+    setlocal norelativenumber
+    setlocal signcolumn=no
+    setlocal winfixheight
+    setlocal nolist
+
+    " Name the buffer
+    execute 'silent file ' . fnameescape('Rabbit Game')
+
+    " Clean up when buffer is wiped
+    autocmd BufWipeout <buffer> call vim4rabbit#CleanupGameBuffer()
+
+    return s:game_bufnr
+endfunction
+
+" Clean up when game buffer is closed
+function! vim4rabbit#CleanupGameBuffer()
+    let s:game_bufnr = -1
+    call s:StopGame()
+
+    " Restore 'p' keymap on review buffer
+    if s:review_bufnr != -1 && bufexists(s:review_bufnr)
+        let l:winnr = bufwinnr(s:review_bufnr)
+        if l:winnr != -1
+            let l:cur_winnr = winnr()
+            execute l:winnr . 'wincmd w'
+            nnoremap <buffer> <silent> p :call vim4rabbit#ShowGameMenu()<CR>
+            execute l:cur_winnr . 'wincmd w'
+        endif
+    endif
+endfunction
+
 " Show the game selection menu
 function! vim4rabbit#ShowGameMenu()
     if s:review_bufnr == -1 || !bufexists(s:review_bufnr)
         return
     endif
 
-    " Stop the spinner while in game mode
-    call s:StopSpinner()
+    " Don't stop the spinner — it keeps running in the review buffer
 
     let s:game_mode = 'menu'
+
+    " Create game buffer (opens split below review)
+    let l:bufnr = s:CreateGameBuffer()
+    if l:bufnr == -1
+        return
+    endif
 
     " Get menu content from Python
     let l:content = py3eval('vim4rabbit.vim_get_game_menu()')
 
-    " Update buffer
-    let l:winnr = bufwinnr(s:review_bufnr)
-    if l:winnr == -1
-        return
-    endif
-
-    let l:cur_winnr = winnr()
-    execute l:winnr . 'wincmd w'
+    " Write menu content into game buffer (we're already in it after CreateGameBuffer)
     setlocal modifiable
-    silent! %delete _
     call setline(1, l:content)
     setlocal nomodifiable
 
-    " Set up menu keymaps (replace loading keymaps)
-    silent! nunmap <buffer> p
+    " Set up menu keymaps on game buffer
     nnoremap <buffer> <silent> z :call vim4rabbit#StartGame('z')<CR>
-    nnoremap <buffer> <silent> c :call vim4rabbit#StartGame('c')<CR>
+    nnoremap <buffer> <silent> e :call vim4rabbit#StartGame('e')<CR>
     nnoremap <buffer> <silent> s :call vim4rabbit#StartGame('s')<CR>
+    nnoremap <buffer> <silent> c :call vim4rabbit#CancelGame()<CR>
 
-    execute l:cur_winnr . 'wincmd w'
+    " Remove 'p' from review buffer while game buffer is open
+    let l:review_winnr = bufwinnr(s:review_bufnr)
+    if l:review_winnr != -1
+        let l:cur_winnr = winnr()
+        execute l:review_winnr . 'wincmd w'
+        silent! nunmap <buffer> p
+        execute l:cur_winnr . 'wincmd w'
+    endif
+
     redraw
 endfunction
 
 " Start a game
 function! vim4rabbit#StartGame(key)
-    if s:review_bufnr == -1 || !bufexists(s:review_bufnr)
+    if s:game_bufnr == -1 || !bufexists(s:game_bufnr)
         return
     endif
 
-    let l:winnr = bufwinnr(s:review_bufnr)
+    let l:winnr = bufwinnr(s:game_bufnr)
     if l:winnr == -1
         return
     endif
 
-    " Get buffer dimensions
+    " Get game buffer dimensions
     let l:cur_winnr = winnr()
     execute l:winnr . 'wincmd w'
     let l:width = winwidth(0)
@@ -814,10 +896,10 @@ function! vim4rabbit#StartGame(key)
 
     " Clear menu keymaps
     silent! nunmap <buffer> z
+    silent! nunmap <buffer> e
     silent! nunmap <buffer> s
 
-    " Set up game keymaps
-    " 'c' now means cancel game (back to loading) instead of coffee game
+    " Set up game keymaps — 'c' means cancel/go-back
     nnoremap <buffer> <silent> c :call vim4rabbit#CancelGame()<CR>
 
     " Snake-specific keymaps
@@ -844,12 +926,12 @@ endfunction
 
 " Timer callback for game updates
 function! s:UpdateGame(timer)
-    if s:review_bufnr == -1 || !bufexists(s:review_bufnr)
+    if s:game_bufnr == -1 || !bufexists(s:game_bufnr)
         call s:StopGame()
         return
     endif
 
-    let l:winnr = bufwinnr(s:review_bufnr)
+    let l:winnr = bufwinnr(s:game_bufnr)
     if l:winnr == -1
         return
     endif
@@ -868,11 +950,11 @@ endfunction
 
 " Handle game input (forward key to Python)
 function! vim4rabbit#GameInput(key)
-    if s:review_bufnr == -1 || !bufexists(s:review_bufnr)
+    if s:game_bufnr == -1 || !bufexists(s:game_bufnr)
         return
     endif
 
-    let l:winnr = bufwinnr(s:review_bufnr)
+    let l:winnr = bufwinnr(s:game_bufnr)
     if l:winnr == -1
         return
     endif
@@ -889,41 +971,14 @@ function! vim4rabbit#GameInput(key)
     redraw
 endfunction
 
-" Cancel game and return to loading animation
+" Cancel game and close game buffer (return to loading)
 function! vim4rabbit#CancelGame()
     call s:StopGame()
 
-    if s:review_bufnr == -1 || !bufexists(s:review_bufnr)
-        return
+    " Close the game buffer — BufWipeout autocmd will restore 'p' keymap
+    if s:game_bufnr != -1 && bufexists(s:game_bufnr)
+        execute 'bwipeout ' . s:game_bufnr
     endif
-
-    let l:winnr = bufwinnr(s:review_bufnr)
-    if l:winnr == -1
-        return
-    endif
-
-    " Restore loading keymaps
-    let l:cur_winnr = winnr()
-    execute l:winnr . 'wincmd w'
-
-    " Remove game-specific keymaps
-    silent! nunmap <buffer> h
-    silent! nunmap <buffer> j
-    silent! nunmap <buffer> k
-    silent! nunmap <buffer> l
-    silent! nunmap <buffer> z
-    silent! nunmap <buffer> s
-
-    " Restore loading keymaps
-    nnoremap <buffer> <silent> c :call vim4rabbit#CancelReview()<CR>
-    nnoremap <buffer> <silent> p :call vim4rabbit#ShowGameMenu()<CR>
-
-    execute l:cur_winnr . 'wincmd w'
-
-    " Restart spinner animation
-    let s:spinner_frame = 0
-    call s:UpdateSpinner(0)
-    let s:spinner_timer = timer_start(750, function('s:UpdateSpinner'), {'repeat': -1})
 endfunction
 
 " Stop game timer and clear state
@@ -934,5 +989,5 @@ function! s:StopGame()
     endif
     let s:game_active = 0
     let s:game_mode = ''
-    py3eval('vim4rabbit.vim_stop_game()')
+    py3 vim4rabbit.vim_stop_game()
 endfunction

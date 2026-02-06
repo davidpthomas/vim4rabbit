@@ -17,7 +17,7 @@ _active_game = None  # type: Optional[object]
 # Game key -> (class, tick_ms)
 GAME_REGISTRY = {
     "z": ("Zen Spiral", ZenSpiral, 500),
-    "c": ("Coffee Cup", CoffeeCup, 500),
+    "e": ("Coffee from Uganda", CoffeeCup, 1040),
     "s": ("Snake", Snake, 200),
 }
 
@@ -32,11 +32,11 @@ def get_game_menu() -> List[str]:
         "   ╠═══════════════════════════════╣",
         "   ║                               ║",
         "   ║   [z]  Zen Spiral             ║",
-        "   ║   [c]  Coffee Cup             ║",
+        "   ║   [e]  Coffee from Uganda      ║",
         "   ║   [s]  Snake                  ║",
         "   ║                               ║",
         "   ║   Press key to start game     ║",
-        "   ║   Press [q] to close          ║",
+        "   ║   [c] to go back              ║",
         "   ║                               ║",
         "   ╚═══════════════════════════════╝",
         "",
