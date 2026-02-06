@@ -13,8 +13,8 @@ from typing import List, Tuple
 DIRECTIONS = {
     "h": (-1, 0),   # left
     "l": (1, 0),    # right
-    "k": (0, -1),   # up
-    "j": (0, 1),    # down
+    "k": (0, 1),    # up
+    "j": (0, -1),   # down
 }
 
 # Opposite directions (can't reverse into yourself)

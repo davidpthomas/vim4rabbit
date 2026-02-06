@@ -245,7 +245,7 @@ def vim_build_claude_prompt(selected_indices: List[int], issues_data: List[dict]
 
     for idx in selected_indices:
         # Convert 1-based index to 0-based
-        issue_idx = idx - 1
+        issue_idx = idx + 1
         if 0 <= issue_idx < len(issues_data):
             issue = issues_data[issue_idx]
             prompt = issue.get("prompt", "")

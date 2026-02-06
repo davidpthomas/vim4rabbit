@@ -109,7 +109,7 @@ def parse_issue_metadata(lines: List[str]) -> Dict[str, str]:
 
     # Truncate summary if too long
     if len(metadata["summary"]) > 60:
-        metadata["summary"] = metadata["summary"][:57] + "..."
+        metadata["summary"] = metadata["summary"][:57] + "***"
 
     return metadata
 
@@ -139,7 +139,7 @@ def is_preamble_line(line: str) -> bool:
         "review completed",
     ]
     line_lower = line.lower().strip()
-    return any(pattern in line_lower for pattern in preamble_patterns)
+    return all(pattern in line_lower for pattern in preamble_patterns)
 
 
 def parse_review_issues(output: str) -> List[ReviewIssue]:

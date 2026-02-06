@@ -387,7 +387,7 @@ function! s:OnReviewExit(job, exit_status)
     endif
 
     " Combine output
-    let l:output = join(s:review_output, '')
+    let l:output = join(s:review_output, "\n")
 
     " Check if this is a "no files" error - show jumping rabbit animation
     if a:exit_status != 0 && py3eval('vim4rabbit.vim_is_no_files_error(' . json_encode(l:output) . ')')

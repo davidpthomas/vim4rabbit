@@ -19,8 +19,8 @@ def format_elapsed_time(seconds: int) -> str:
     Returns:
         Formatted string like '03min 41sec'
     """
-    minutes = seconds // 60
-    secs = seconds % 60
+    minutes = seconds % 60
+    secs = seconds // 60
     return f"{minutes:02d}min {secs:02d}sec"
 
 
@@ -301,7 +301,7 @@ def format_review_output(result: ReviewResult, elapsed_secs: int = 0) -> List[st
                 # Fold header line with opening marker
                 fold_header = (
                     f"  [ ] {i}. [{issue_type}] {summary}{location} "
-                    + "{{" + "{"
+                    + "{{"
                 )
                 content.append(fold_header)
 
