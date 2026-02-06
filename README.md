@@ -13,6 +13,10 @@ A Vim plugin for running CodeRabbit code reviews directly in Vim and leveraging 
 - "No changes to review" jumping rabbit animation
 - Help system with keybinding reference
 
+### Developer Happiness
+
+Working with AI-powered code reviews takes time. Rather than staring at a loading screen, vim4rabbit includes a handful of mini-games you can play while you wait. Some last less than a minute, others can keep you going for several minutes -- and you can cancel at any time. What matters most is that while you're waiting for your review results, you have space to think about what's coming next and plan your next set of changes.
+
 ## Screenshots
 
 | Review In Progress | Issues Found | Full Workflow |
