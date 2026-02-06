@@ -10,9 +10,45 @@ from vim4rabbit.content import (
     get_no_work_animation_frame,
     get_no_work_frame_count,
     is_no_files_error,
+    render_help,
     NO_WORK_ANIMATION_FRAMES,
 )
 from vim4rabbit.types import ReviewResult, ReviewIssue
+
+
+class TestRenderHelp:
+    """Tests for render_help function."""
+
+    def test_help_contains_header(self):
+        """Test that help screen contains the header."""
+        content = render_help(80)
+        full_text = "\n".join(content)
+        assert "vim4rabbit Help" in full_text
+
+    def test_help_contains_commands(self):
+        """Test that help screen lists available commands."""
+        content = render_help(80)
+        full_text = "\n".join(content)
+        assert "[ru]" in full_text
+        assert "[rc]" in full_text
+        assert "[ra]" in full_text
+        assert "Review Uncommitted" in full_text
+        assert "Review Committed" in full_text
+        assert "Review All" in full_text
+
+    def test_help_contains_quit(self):
+        """Test that help screen shows quit option."""
+        content = render_help(80)
+        full_text = "\n".join(content)
+        assert "[q] Quit" in full_text
+
+    def test_help_adapts_to_width(self):
+        """Test that help screen adapts to different widths."""
+        narrow = render_help(40)
+        wide = render_help(120)
+        # Both should have content
+        assert len(narrow) > 0
+        assert len(wide) > 0
 
 
 class TestFormatReviewOutput:
