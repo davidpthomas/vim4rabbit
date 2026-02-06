@@ -4,7 +4,7 @@ Buffer content formatting for vim4rabbit.
 This module handles generating content for Vim buffers.
 """
 
-from typing import List
+from typing import List, Tuple
 
 from .types import ReviewResult
 
@@ -202,6 +202,46 @@ def get_animation_frame(frame_number: int, elapsed_secs: int = 0) -> List[str]:
     content.extend(rabbit_lines)
     content.append("")
     content.append("  [p] play  |  [c] cancel")
+
+    return content
+
+
+# Help content configuration
+HELP_COMMANDS: List[List[Tuple[str, str]]] = [
+    # Column 1
+    [("ru", "Review Uncommitted"), ("rc", "Review Committed"), ("ra", "Review All")],
+]
+
+
+def render_help(width: int) -> List[str]:
+    """
+    Render the help screen content with single column layout.
+
+    Ported from vim4rabbit#RenderHelp().
+
+    Args:
+        width: Window width in characters
+
+    Returns:
+        List of strings (lines) for the help buffer
+    """
+    content: List[str] = []
+
+    # Header line with emoji
+    content.append("  \U0001F430 vim4rabbit Help")  # rabbit emoji
+    content.append("")
+
+    # Get commands
+    commands = HELP_COMMANDS[0] if len(HELP_COMMANDS) > 0 else []
+
+    # Build command rows
+    for key, desc in commands:
+        content.append(f"  [{key}] {desc}")
+
+    # Bottom line with quit on the right
+    quit_text = "[q] Quit"
+    padding = width - len(quit_text) - 4
+    content.append(" " * padding + quit_text + "  ")
 
     return content
 
