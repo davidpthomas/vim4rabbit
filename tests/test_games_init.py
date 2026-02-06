@@ -27,6 +27,7 @@ class TestGetGameMenu:
         assert "Zen Spiral" in full_text
         assert "Coffee from Uganda" in full_text
         assert "Snake" in full_text
+        assert "Global Thermonuclear War" in full_text
 
     def test_contains_key_hints(self):
         lines = get_game_menu()
@@ -34,6 +35,7 @@ class TestGetGameMenu:
         assert "[z]" in full_text
         assert "[e]" in full_text
         assert "[s]" in full_text
+        assert "[w]" in full_text
         assert "[c] to go back" in full_text
 
 
@@ -139,6 +141,7 @@ class TestGameRegistry:
         assert "z" in GAME_REGISTRY
         assert "e" in GAME_REGISTRY
         assert "s" in GAME_REGISTRY
+        assert "w" in GAME_REGISTRY
 
     def test_registry_structure(self):
         for key, (name, cls, tick_ms) in GAME_REGISTRY.items():
