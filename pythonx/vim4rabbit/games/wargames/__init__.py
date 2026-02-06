@@ -86,6 +86,8 @@ class WarGames:
     def handle_input(self, key: str) -> None:
         """Process a keypress."""
         if self._game_over:
+            if key == "o" and self.phase != "great_choice":
+                self.phase = "great_choice"
             return
 
         if self.phase == "password":
@@ -204,6 +206,8 @@ class WarGames:
             lines.append(f"   YOU  >> MISSILE #{i + 1} -> {t}")
         for i, t in enumerate(self.ai_targets):
             lines.append(f"   WOPR >> MISSILE #{i + 1} -> {t}")
+        lines.append("")
+        lines.append("   [x] LAUNCH  |  [c] cancel")
 
         return lines
 
@@ -213,6 +217,9 @@ class WarGames:
 
     def get_game_over_frame(self) -> List[str]:
         """The iconic WarGames ending."""
+        if self.phase == "great_choice":
+            return self._frame_great_choice()
+
         lines: List[str] = []
         lines.append("")
         lines.append("")
@@ -224,16 +231,43 @@ class WarGames:
         lines.append("        ║                                       ║")
         lines.append("        ║        * * * GAME OVER * * *          ║")
         lines.append("        ║                                       ║")
-        lines.append("        ║   WINNER: NONE                        ║")
+        lines.append("        ║            WINNER: NONE               ║")
         lines.append("        ║                                       ║")
-        lines.append("        ║   A STRANGE GAME.                     ║")
-        lines.append("        ║   THE ONLY WINNING MOVE IS            ║")
-        lines.append("        ║   NOT TO PLAY.                        ║")
+        lines.append("        ║          A STRANGE GAME.              ║")
+        lines.append("        ║       THE ONLY WINNING MOVE IS        ║")
+        lines.append("        ║            NOT TO PLAY.               ║")
         lines.append("        ║                                       ║")
-        lines.append("        ║   HOW ABOUT A NICE GAME OF CHESS?     ║")
+        lines.append("        ║    HOW ABOUT A NICE GAME OF CHESS?    ║")
         lines.append("        ║                                       ║")
-        lines.append("        ║   [c] cancel                          ║")
+        lines.append("        ║        [o] OK. Good decision.         ║")
         lines.append("        ║                                       ║")
         lines.append("        ╚═══════════════════════════════════════╝")
+
+        return lines
+
+    def _frame_great_choice(self) -> List[str]:
+        """Big bold 'Great Choice!' screen."""
+        lines: List[str] = []
+        cy = max((self.height - 12) // 2, 0)
+        for _ in range(cy):
+            lines.append("")
+
+        lines.append("    ╔══════════════════════════════════════════════════╗")
+        lines.append("    ║                                                  ║")
+        lines.append("    ║    ██████ ██████ ██████  █████ ████████ ██       ║")
+        lines.append("    ║   ██      ██   █ ██     ██   ██   ██   ██       ║")
+        lines.append("    ║   ██  ██  █████  ████   ███████   ██   ██       ║")
+        lines.append("    ║   ██   █  ██  █  ██     ██   ██   ██            ║")
+        lines.append("    ║    █████  ██  ██ ██████ ██   ██   ██   ██       ║")
+        lines.append("    ║                                                  ║")
+        lines.append("    ║    █████ ██  ██  █████  ██  █████ ██████ ██     ║")
+        lines.append("    ║   ██     ██  ██ ██   ██ ██ ██     ██     ██     ║")
+        lines.append("    ║   ██     ██████ ██   ██ ██ ██     ████          ║")
+        lines.append("    ║   ██     ██  ██ ██   ██ ██ ██     ██            ║")
+        lines.append("    ║    █████ ██  ██  █████  ██  █████ ██████ ██     ║")
+        lines.append("    ║                                                  ║")
+        lines.append("    ║                  [c] cancel                      ║")
+        lines.append("    ║                                                  ║")
+        lines.append("    ╚══════════════════════════════════════════════════╝")
 
         return lines
