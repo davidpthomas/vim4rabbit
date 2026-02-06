@@ -103,6 +103,36 @@ coderabbit --help
 
 For more information, see the [CodeRabbit CLI documentation](https://docs.coderabbit.ai/cli/overview).
 
+## Claude Code CLI Setup
+
+### Installation
+
+Install Claude Code via npm:
+
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
+### Authentication
+
+Launch Claude Code to authenticate:
+
+```bash
+claude
+```
+
+Follow the prompts to connect your Anthropic account. You can authenticate with an Anthropic API key or through the Anthropic Console.
+
+### Verify Installation
+
+Test the CLI is working:
+
+```bash
+claude --version
+```
+
+For more information, see the [Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code).
+
 ## Architecture
 
 vim4rabbit uses a layered architecture separating UI (VimScript) from business logic (Python):
