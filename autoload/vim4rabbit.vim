@@ -799,6 +799,9 @@ function! s:CreateGameBuffer()
     setlocal winfixheight
     setlocal nolist
 
+    " Increase game buffer height for better visibility
+    execute 'resize +5'
+
     " Name the buffer
     execute 'silent file ' . fnameescape('Rabbit Game')
 
@@ -854,6 +857,7 @@ function! vim4rabbit#ShowGameMenu()
     nnoremap <buffer> <silent> e :call vim4rabbit#StartGame('e')<CR>
     nnoremap <buffer> <silent> s :call vim4rabbit#StartGame('s')<CR>
     nnoremap <buffer> <silent> p :call vim4rabbit#StartGame('p')<CR>
+    nnoremap <buffer> <silent> w :call vim4rabbit#StartGame('w')<CR>
     nnoremap <buffer> <silent> c :call vim4rabbit#CancelGame()<CR>
 
     " Remove 'p' from review buffer while game buffer is open
@@ -900,6 +904,7 @@ function! vim4rabbit#StartGame(key)
     silent! nunmap <buffer> e
     silent! nunmap <buffer> s
     silent! nunmap <buffer> p
+    silent! nunmap <buffer> w
 
     " Set up game keymaps — 'c' means cancel/go-back
     nnoremap <buffer> <silent> c :call vim4rabbit#CancelGame()<CR>
@@ -916,6 +921,17 @@ function! vim4rabbit#StartGame(key)
     if a:key ==# 'p'
         nnoremap <buffer> <silent> j :call vim4rabbit#GameInput('j')<CR>
         nnoremap <buffer> <silent> k :call vim4rabbit#GameInput('k')<CR>
+    endif
+
+    " WarGames keymaps (password letters + x to launch)
+    if a:key ==# 'w'
+        nnoremap <buffer> <silent> j :call vim4rabbit#GameInput('j')<CR>
+        nnoremap <buffer> <silent> o :call vim4rabbit#GameInput('o')<CR>
+        nnoremap <buffer> <silent> s :call vim4rabbit#GameInput('s')<CR>
+        nnoremap <buffer> <silent> h :call vim4rabbit#GameInput('h')<CR>
+        nnoremap <buffer> <silent> u :call vim4rabbit#GameInput('u')<CR>
+        nnoremap <buffer> <silent> a :call vim4rabbit#GameInput('a')<CR>
+        nnoremap <buffer> <silent> x :call vim4rabbit#GameInput('x')<CR>
     endif
 
     " Render first frame
