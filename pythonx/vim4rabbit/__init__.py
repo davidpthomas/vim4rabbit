@@ -31,6 +31,7 @@ from .games import (
     tick_game,
 )
 from .parser import parse_review_issues
+from . import selection
 
 
 # =============================================================================
@@ -74,7 +75,7 @@ def vim_format_review(
     issues_data: list,
     error_message: str,
     elapsed_secs: int = 0,
-) -> List[str]:
+) -> dict:
     """
     Format review results for display.
 
@@ -88,7 +89,9 @@ def vim_format_review(
         elapsed_secs: Total elapsed seconds for the review command
 
     Returns:
-        List of strings (lines) for the review buffer
+        Dict with keys:
+        - lines: List of strings for the review buffer
+        - issue_count: Number of issues found
     """
     from .types import ReviewIssue, ReviewResult
 
@@ -275,6 +278,105 @@ def vim_build_claude_prompt(selected_indices: List[int], issues_data: List[dict]
         combined += f"## Issue {i}\n{prompt}\n\n"
 
     return combined.strip()
+
+
+# =============================================================================
+# Selection API for VimScript (vim_* functions)
+# =============================================================================
+
+
+def vim_init_selections(issue_count: int) -> None:
+    """
+    Initialize selection state for a new review.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_init_selections(count)')
+    """
+    selection.init_selections(issue_count)
+
+
+def vim_reset_selections() -> None:
+    """
+    Clear all selection state (on cleanup).
+
+    Called from VimScript: py3eval('vim4rabbit.vim_reset_selections()')
+    """
+    selection.reset_selections()
+
+
+def vim_toggle_selection(issue_num: int) -> bool:
+    """
+    Toggle selection for an issue number.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_toggle_selection(num)')
+
+    Returns:
+        New selection state (True = selected)
+    """
+    return selection.toggle_selection(issue_num)
+
+
+def vim_select_all() -> int:
+    """
+    Select all issues.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_select_all()')
+
+    Returns:
+        Number of issues selected
+    """
+    return selection.select_all()
+
+
+def vim_deselect_all() -> int:
+    """
+    Deselect all issues.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_deselect_all()')
+
+    Returns:
+        Number of issues deselected
+    """
+    return selection.deselect_all()
+
+
+def vim_get_selected() -> List[int]:
+    """
+    Get sorted list of selected issue numbers.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_get_selected()')
+
+    Returns:
+        Sorted list of 1-based issue numbers
+    """
+    return selection.get_selected()
+
+
+def vim_get_issue_count() -> int:
+    """
+    Get total number of issues.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_get_issue_count()')
+
+    Returns:
+        Total issue count
+    """
+    return selection.get_issue_count()
+
+
+def vim_find_issue_at_line(lines: List[str], cursor_line_index: int) -> int:
+    """
+    Find issue number at the given cursor line.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_find_issue_at_line(lines, idx)')
+
+    Args:
+        lines: Buffer lines (0-indexed list)
+        cursor_line_index: 0-based line index of cursor
+
+    Returns:
+        Issue number (1-based) or 0 if not found
+    """
+    return selection.find_issue_at_line(lines, cursor_line_index)
 
 
 # =============================================================================

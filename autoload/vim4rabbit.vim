@@ -12,9 +12,6 @@ let s:review_bufnr = -1
 let s:review_job = v:null
 let s:review_output = []
 
-" Store issue count for selection functions
-let s:review_issue_count = 0
-
 " Animation state
 let s:spinner_timer = v:null
 let s:spinner_frame = 0
@@ -397,10 +394,10 @@ function! s:OnReviewExit(job, exit_status)
 
     " Format output via Python (pass elapsed time for display)
     if a:exit_status != 0
-        let l:content = py3eval("vim4rabbit.vim_format_review(False, [], " . json_encode(l:output) . ", " . s:review_elapsed_secs . ")")
+        let l:review = py3eval("vim4rabbit.vim_format_review(False, [], " . json_encode(l:output) . ", " . s:review_elapsed_secs . ")")
     else
         let l:result = py3eval("vim4rabbit.vim_parse_review_output(" . json_encode(l:output) . ")")
-        let l:content = py3eval('vim4rabbit.vim_format_review(' .
+        let l:review = py3eval('vim4rabbit.vim_format_review(' .
             \ l:result.success . ', ' .
             \ string(l:result.issues_data) . ', ' .
             \ string(l:result.error_message) . ', ' .
@@ -409,8 +406,8 @@ function! s:OnReviewExit(job, exit_status)
         call s:StoreIssuesData(l:result.issues_data)
     endif
 
-    " Update buffer content
-    call s:UpdateReviewBuffer(l:content)
+    " Update buffer content (unpack dict from Python)
+    call s:UpdateReviewBuffer(l:review.lines, l:review.issue_count)
 endfunction
 
 " Store issues data in buffer-local variable for Claude integration
@@ -453,7 +450,7 @@ function! vim4rabbit#CancelReview()
 endfunction
 
 " Update the review buffer with content
-function! s:UpdateReviewBuffer(content)
+function! s:UpdateReviewBuffer(content, issue_count)
     if s:review_bufnr == -1 || !bufexists(s:review_bufnr)
         return
     endif
@@ -480,16 +477,8 @@ function! s:UpdateReviewBuffer(content)
     setlocal foldtext=vim4rabbit#FoldText()
     setlocal foldenable
 
-    " Initialize selection tracking
-    let b:vim4rabbit_selections = {}
-
-    " Count issues for selection functions
-    let s:review_issue_count = 0
-    for l:line in a:content
-        if l:line =~# '^\s*\[ \] \d\+\.'
-            let s:review_issue_count += 1
-        endif
-    endfor
+    " Initialize selection tracking in Python
+    call py3eval('vim4rabbit.vim_init_selections(' . a:issue_count . ')')
 
     " Remove cancel mapping since job is done
     silent! nunmap <buffer> c
@@ -500,8 +489,8 @@ endfunction
 
 " Display an error in the review buffer
 function! s:DisplayReviewError(message)
-    let l:content = py3eval('vim4rabbit.vim_format_review(False, [], ' . string(a:message) . ')')
-    call s:UpdateReviewBuffer(l:content)
+    let l:review = py3eval('vim4rabbit.vim_format_review(False, [], ' . string(a:message) . ')')
+    call s:UpdateReviewBuffer(l:review.lines, l:review.issue_count)
 endfunction
 
 " Close the review buffer
@@ -553,7 +542,9 @@ function! vim4rabbit#CleanupReview()
     endif
     let s:review_job = v:null
     let s:review_bufnr = -1
-    let s:review_issue_count = 0
+
+    " Clear selection state in Python
+    call py3eval('vim4rabbit.vim_reset_selections()')
 endfunction
 
 " Custom fold text for review issues - shows type and summary
@@ -566,31 +557,10 @@ endfunction
 
 " Get the issue number at the current cursor position
 function! vim4rabbit#GetIssueAtCursor()
-    let l:lnum = line('.')
-    let l:line = getline(l:lnum)
-
-    " Check if we're on a fold header line (has checkbox pattern)
-    let l:match = matchlist(l:line, '^\s*\[\(.\)\]\s*\(\d\+\)\.')
-    if !empty(l:match)
-        return str2nr(l:match[2])
-    endif
-
-    " Check if we're inside a fold - look upward for the fold header
-    let l:search_line = l:lnum
-    while l:search_line > 0
-        let l:search_text = getline(l:search_line)
-        let l:match = matchlist(l:search_text, '^\s*\[\(.\)\]\s*\(\d\+\)\.')
-        if !empty(l:match)
-            return str2nr(l:match[2])
-        endif
-        " Stop if we hit a fold end marker (we went too far)
-        if l:search_text =~# '}}}'
-            break
-        endif
-        let l:search_line -= 1
-    endwhile
-
-    return 0
+    " Pass buffer lines and 0-based cursor index to Python
+    let l:lines = getline(1, '$')
+    let l:cursor_idx = line('.') - 1
+    return py3eval('vim4rabbit.vim_find_issue_at_line(' . string(l:lines) . ', ' . l:cursor_idx . ')')
 endfunction
 
 " Find the line number of a specific issue's checkbox
@@ -630,72 +600,44 @@ function! vim4rabbit#ToggleIssueSelection()
         return
     endif
 
-    " Initialize selections dict if needed
-    if !exists('b:vim4rabbit_selections')
-        let b:vim4rabbit_selections = {}
-    endif
-
-    " Toggle selection state
-    let l:key = string(l:issue_num)
-    if has_key(b:vim4rabbit_selections, l:key) && b:vim4rabbit_selections[l:key]
-        let b:vim4rabbit_selections[l:key] = 0
-        call vim4rabbit#UpdateCheckbox(l:issue_num, 0)
-    else
-        let b:vim4rabbit_selections[l:key] = 1
-        call vim4rabbit#UpdateCheckbox(l:issue_num, 1)
-    endif
+    " Toggle in Python, get new state
+    let l:selected = py3eval('vim4rabbit.vim_toggle_selection(' . l:issue_num . ')')
+    call vim4rabbit#UpdateCheckbox(l:issue_num, l:selected)
 endfunction
 
 " Select all issues
 function! vim4rabbit#SelectAllIssues()
-    if s:review_issue_count == 0
+    let l:count = py3eval('vim4rabbit.vim_select_all()')
+    if l:count == 0
         return
     endif
 
-    if !exists('b:vim4rabbit_selections')
-        let b:vim4rabbit_selections = {}
-    endif
-
-    for l:i in range(1, s:review_issue_count)
-        let b:vim4rabbit_selections[string(l:i)] = 1
+    for l:i in range(1, l:count)
         call vim4rabbit#UpdateCheckbox(l:i, 1)
     endfor
 
-    echo "Selected all " . s:review_issue_count . " issue(s)"
+    echo "Selected all " . l:count . " issue(s)"
 endfunction
 
 " Deselect all issues
 function! vim4rabbit#DeselectAllIssues()
-    if s:review_issue_count == 0
+    let l:count = py3eval('vim4rabbit.vim_get_issue_count()')
+    if l:count == 0
         return
     endif
 
-    if !exists('b:vim4rabbit_selections')
-        let b:vim4rabbit_selections = {}
-    endif
+    call py3eval('vim4rabbit.vim_deselect_all()')
 
-    for l:i in range(1, s:review_issue_count)
-        let b:vim4rabbit_selections[string(l:i)] = 0
+    for l:i in range(1, l:count)
         call vim4rabbit#UpdateCheckbox(l:i, 0)
     endfor
 
     echo "Deselected all issues"
 endfunction
 
-" Get list of selected issue numbers (placeholder for future AI integration)
+" Get list of selected issue numbers
 function! vim4rabbit#GetSelectedIssues()
-    if !exists('b:vim4rabbit_selections')
-        return []
-    endif
-
-    let l:selected = []
-    for [l:key, l:val] in items(b:vim4rabbit_selections)
-        if l:val
-            call add(l:selected, str2nr(l:key))
-        endif
-    endfor
-
-    return sort(l:selected, 'n')
+    return py3eval('vim4rabbit.vim_get_selected()')
 endfunction
 
 " Placeholder for future AI-powered fix application

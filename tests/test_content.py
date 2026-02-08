@@ -57,10 +57,11 @@ class TestFormatReviewOutput:
     def test_success_no_issues(self):
         """Test successful review with no issues."""
         result = ReviewResult(success=True, issues=[])
-        content = format_review_output(result)
-        full_text = "\n".join(content)
+        output = format_review_output(result)
+        full_text = "\n".join(output["lines"])
         assert "coderabbit" in full_text
         assert "No issues found" in full_text
+        assert output["issue_count"] == 0
 
     def test_success_with_issues(self):
         """Test successful review with issues."""
@@ -69,14 +70,15 @@ class TestFormatReviewOutput:
             ReviewIssue(lines=["Problem 2"]),
         ]
         result = ReviewResult(success=True, issues=issues)
-        content = format_review_output(result)
-        full_text = "\n".join(content)
+        output = format_review_output(result)
+        full_text = "\n".join(output["lines"])
         assert "Found 2 issue(s)" in full_text
         # Issues are displayed with checkbox format: [ ] 1. Issue
         assert "[ ] 1." in full_text
         assert "[ ] 2." in full_text
         assert "Problem 1" in full_text
         assert "Problem 2" in full_text
+        assert output["issue_count"] == 2
 
     def test_fold_header_includes_issue_type(self):
         """Test that fold header includes issue type in brackets."""
@@ -90,8 +92,8 @@ class TestFormatReviewOutput:
             ),
         ]
         result = ReviewResult(success=True, issues=issues)
-        content = format_review_output(result)
-        full_text = "\n".join(content)
+        output = format_review_output(result)
+        full_text = "\n".join(output["lines"])
         assert "[bug]" in full_text
         assert "Null pointer dereference" in full_text
         assert "(src/main.py:10-20)" in full_text
@@ -102,24 +104,25 @@ class TestFormatReviewOutput:
             ReviewIssue(lines=["Details"], summary="Some problem"),
         ]
         result = ReviewResult(success=True, issues=issues)
-        content = format_review_output(result)
-        full_text = "\n".join(content)
+        output = format_review_output(result)
+        full_text = "\n".join(output["lines"])
         assert "[issue]" in full_text
         assert "Some problem" in full_text
 
     def test_error_result(self):
         """Test error result formatting."""
         result = ReviewResult(success=False, error_message="Command not found: coderabbit")
-        content = format_review_output(result)
-        full_text = "\n".join(content)
+        output = format_review_output(result)
+        full_text = "\n".join(output["lines"])
         assert "Error" in full_text
         assert "Command not found" in full_text
+        assert output["issue_count"] == 0
 
     def test_close_instruction(self):
         """Test that close instruction is present."""
         result = ReviewResult(success=True, issues=[])
-        content = format_review_output(result)
-        full_text = "\n".join(content)
+        output = format_review_output(result)
+        full_text = "\n".join(output["lines"])
         assert "[q] close" in full_text
 
 
@@ -305,8 +308,8 @@ class TestFormatReviewOutputElapsedTime:
         """Test elapsed time is shown next to issue count."""
         issues = [ReviewIssue(lines=["Problem 1"])]
         result = ReviewResult(success=True, issues=issues)
-        content = format_review_output(result, elapsed_secs=221)
-        full_text = "\n".join(content)
+        output = format_review_output(result, elapsed_secs=221)
+        full_text = "\n".join(output["lines"])
         assert "Found 1 issue(s)" in full_text
         assert "03min 41sec" in full_text
 
@@ -314,15 +317,15 @@ class TestFormatReviewOutputElapsedTime:
         """Test elapsed time defaults to zero."""
         issues = [ReviewIssue(lines=["Problem 1"])]
         result = ReviewResult(success=True, issues=issues)
-        content = format_review_output(result)
-        full_text = "\n".join(content)
+        output = format_review_output(result)
+        full_text = "\n".join(output["lines"])
         assert "00min 00sec" in full_text
 
     def test_no_elapsed_time_on_error(self):
         """Test that error results don't show elapsed time in issue line."""
         result = ReviewResult(success=False, error_message="Something failed")
-        content = format_review_output(result, elapsed_secs=100)
-        full_text = "\n".join(content)
+        output = format_review_output(result, elapsed_secs=100)
+        full_text = "\n".join(output["lines"])
         assert "Error" in full_text
         # Elapsed time should NOT appear in error output
         assert "01min 40sec" not in full_text
@@ -330,7 +333,7 @@ class TestFormatReviewOutputElapsedTime:
     def test_no_elapsed_time_when_no_issues(self):
         """Test that no-issues result doesn't show elapsed time."""
         result = ReviewResult(success=True, issues=[])
-        content = format_review_output(result, elapsed_secs=100)
-        full_text = "\n".join(content)
+        output = format_review_output(result, elapsed_secs=100)
+        full_text = "\n".join(output["lines"])
         assert "No issues found" in full_text
         assert "01min 40sec" not in full_text
