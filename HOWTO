@@ -24,5 +24,8 @@ jira init
 Python/Testing
 * dev: cd /app && pytest . -v
 
+
+# allow direnv tool to un/load env vars for setting up python test env framework
+cd ~/dev/vim4rabbit && direnv allow
 python -m pytest tests/ -v
 
