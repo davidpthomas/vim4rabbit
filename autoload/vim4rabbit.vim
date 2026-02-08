@@ -237,7 +237,7 @@ function! vim4rabbit#Review(...)
     nnoremap <buffer> <silent> <leader>n :call vim4rabbit#DeselectAllIssues()<CR>
 
     " Claude integration
-    nnoremap <buffer> <silent> <leader>c :call vim4rabbit#LaunchClaude()<CR>
+    nnoremap <buffer> <silent> @ :call vim4rabbit#LaunchClaude()<CR>
 
     " Clean up when buffer is wiped
     autocmd BufWipeout <buffer> call vim4rabbit#CleanupReview()
@@ -481,8 +481,8 @@ function! s:UpdateReviewBuffer(content, issue_count)
     " Initialize selection tracking in Python
     call py3eval('vim4rabbit.vim_init_selections(' . a:issue_count . ')')
 
-    " Remove cancel mapping since job is done
-    silent! nunmap <buffer> c
+    " Remap 'c' from cancel to close now that job is done
+    nnoremap <buffer> <silent> c :call vim4rabbit#CloseReview()<CR>
 
     execute l:cur_winnr . 'wincmd w'
     redraw

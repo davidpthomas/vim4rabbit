@@ -1,21 +1,41 @@
-# List of various instrutions for setup/config
+# HOWTO - Setup and Configuration
 
-# Local development
-> Develop on the cli (localhost)
->> cd ~/dev/vim4rabbit
->> claude
+## Local Development
 
-# Setup Jira
-> Atlassian.com > Profile > Security > API Tokens > create token
->> # Install official Atlassian MCP servier with Claude CLI
+Develop on the CLI (localhost):
+
+```bash
+cd ~/dev/vim4rabbit
+claude
+```
+
+## Setup Jira
+
+1. Atlassian.com > Profile > Security > API Tokens > Create token
+2. Install the official Atlassian MCP server with Claude CLI:
+
+```bash
 claude mcp add --transport sse atlassian https://mcp.atlassian.com/v1/sse -s user
-claude:  /mcp | atlassian | authenticate/connect
+```
 
-# Setup pytest framework
-# allow direnv tool to un/load env vars for setting up python test env framework
-# -- Only need to run this once;  it will error the first time and mention running 'direnv allow'
+3. In Claude CLI: `/mcp` > atlassian > authenticate/connect
+
+## Setup pytest Framework
+
+Allow direnv to load env vars for the Python test env (only need to run once; it will error the first time and mention running `direnv allow`):
+
+```bash
 cd ~/dev/vim4rabbit && direnv allow
-python -m pytest tests/ -v
-# coverage
-.venv/bin/python -m pytest tests/ --cov=vim4rabbit --cov-report=term-missing
+```
 
+Run tests:
+
+```bash
+python -m pytest tests/ -v
+```
+
+Run tests with coverage:
+
+```bash
+.venv/bin/python -m pytest tests/ --cov=vim4rabbit --cov-report=term-missing
+```
