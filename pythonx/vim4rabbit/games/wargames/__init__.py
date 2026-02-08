@@ -240,8 +240,6 @@ class WarGames:
         lines.append("        ║                                       ║")
         lines.append("        ║    HOW ABOUT A NICE GAME OF CHESS?    ║")
         lines.append("        ║                                       ║")
-        lines.append("        ║        [o] OK. Good decision.         ║")
-        lines.append("        ║                                       ║")
         lines.append("        ╚═══════════════════════════════════════╝")
         lines.append("")
         lines.append("  WarGames  |  [o] OK  |  [c] cancel")
