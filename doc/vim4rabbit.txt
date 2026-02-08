@@ -97,17 +97,17 @@ Available games:
 
     b       Coffee Break! - watch a cup of coffee brew
     z       Zen Spiral - relaxing animated spiral
-    s       Snake - classic snake game
+    r       Rabbit - classic rabbit game
     p       Pong - paddle ball game
     m       Enter the Matrix - digital rain animation
     w       Global Thermonuclear War - WarGames tribute
 
-Press `c` in the game menu or during a game to go back.
+Press `c` in the game menu or during a game to cancel.
 
                                                   *vim4rabbit-games-controls*
 Game-specific controls:
 
-    Snake:      h/j/k/l to move (vim-style)
+    Rabbit:     h/j/k/l or w/a/s/d to move
     Pong:       j/k to move paddle
     WarGames:   j/o/s/h/u/a to enter password, x to launch
     Matrix:     n/s/r to toggle character sets

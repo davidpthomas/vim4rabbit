@@ -799,7 +799,7 @@ function! vim4rabbit#ShowGameMenu()
     " Set up menu keymaps on game buffer
     nnoremap <buffer> <silent> z :call vim4rabbit#StartGame('z')<CR>
     nnoremap <buffer> <silent> b :call vim4rabbit#StartGame('b')<CR>
-    nnoremap <buffer> <silent> s :call vim4rabbit#StartGame('s')<CR>
+    nnoremap <buffer> <silent> r :call vim4rabbit#StartGame('r')<CR>
     nnoremap <buffer> <silent> p :call vim4rabbit#StartGame('p')<CR>
     nnoremap <buffer> <silent> w :call vim4rabbit#StartGame('w')<CR>
     nnoremap <buffer> <silent> m :call vim4rabbit#StartGame('m')<CR>
@@ -847,7 +847,7 @@ function! vim4rabbit#StartGame(key)
     " Clear menu keymaps
     silent! nunmap <buffer> z
     silent! nunmap <buffer> b
-    silent! nunmap <buffer> s
+    silent! nunmap <buffer> r
     silent! nunmap <buffer> p
     silent! nunmap <buffer> w
     silent! nunmap <buffer> m
@@ -855,12 +855,16 @@ function! vim4rabbit#StartGame(key)
     " Set up game keymaps — 'c' means cancel/go-back
     nnoremap <buffer> <silent> c :call vim4rabbit#CancelGame()<CR>
 
-    " Snake-specific keymaps
-    if a:key ==# 's'
+    " Rabbit-specific keymaps (h/j/k/l and w/a/s/d)
+    if a:key ==# 'r'
         nnoremap <buffer> <silent> h :call vim4rabbit#GameInput('h')<CR>
         nnoremap <buffer> <silent> j :call vim4rabbit#GameInput('j')<CR>
         nnoremap <buffer> <silent> k :call vim4rabbit#GameInput('k')<CR>
         nnoremap <buffer> <silent> l :call vim4rabbit#GameInput('l')<CR>
+        nnoremap <buffer> <silent> a :call vim4rabbit#GameInput('a')<CR>
+        nnoremap <buffer> <silent> s :call vim4rabbit#GameInput('s')<CR>
+        nnoremap <buffer> <silent> d :call vim4rabbit#GameInput('d')<CR>
+        nnoremap <buffer> <silent> w :call vim4rabbit#GameInput('w')<CR>
     endif
 
     " Pong-specific keymaps (j/k for paddle)

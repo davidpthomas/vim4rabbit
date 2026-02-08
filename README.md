@@ -24,12 +24,12 @@ Press `p` during a loading review to open the game menu:
 |-----|------|-------------|
 | `b` | Coffee Break! | Watch a cup of coffee brew |
 | `z` | Zen Spiral | Relaxing animated spiral |
-| `s` | Snake | Classic snake game (h/j/k/l to move) |
+| `r` | Rabbit | Classic rabbit game (h/j/k/l or w/a/s/d to move) |
 | `p` | Pong | Paddle ball game (j/k to move) |
 | `m` | Enter the Matrix | Digital rain animation (n/s/r to toggle character sets) |
 | `w` | Global Thermonuclear War | WarGames tribute (j/o/s/h/u/a for password, x to launch) |
 
-Press `c` at any time to go back to the review panel.
+Press `c` at any time to cancel and go back to the review panel.
 
 ## Screenshots
 
@@ -177,7 +177,7 @@ vim4rabbit uses a layered architecture separating UI (VimScript) from business l
 │                         │                                       │
 │  ┌──────────────┐ ┌─────────────────────────────────────────┐   │
 │  │ selection.py │ │ games/  Mini-games during loading        │   │
-│  │ Issue select │ │ zen_spiral, coffee_cup, snake, pong,     │   │
+│  │ Issue select │ │ zen_spiral, coffee_cup, rabbit, pong,     │   │
 │  │ state mgmt   │ │ wargames, matrix                         │   │
 │  └──────────────┘ └─────────────────────────────────────────┘   │
 │                                                                 │
@@ -257,7 +257,7 @@ vim4rabbit/
 │   └── games/                 # Mini-games during loading
 │       ├── coffee_cup/        # Coffee Break! animation
 │       ├── zen_spiral/        # Zen Spiral animation
-│       ├── snake/             # Snake game
+│       ├── rabbit/            # Rabbit game
 │       ├── pong/              # Pong game
 │       ├── wargames/          # Global Thermonuclear War
 │       └── matrix/            # Matrix digital rain

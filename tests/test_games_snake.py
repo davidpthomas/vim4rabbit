@@ -1,7 +1,10 @@
-"""Tests for vim4rabbit.games.snake module."""
+"""Tests for vim4rabbit.games.rabbit module."""
 
 import pytest
-from vim4rabbit.games.snake import Snake, DIRECTIONS, INITIAL_PELLETS, GROW_ON_EAT
+from vim4rabbit.games.rabbit import (
+    Snake, DIRECTIONS, WASD_MAP, INITIAL_PELLETS, GROW_ON_EAT,
+    CELL_EMPTY, CELL_HEAD, CELL_TAIL, PELLET_EMOJIS,
+)
 
 
 class TestSnakeInit:
@@ -10,13 +13,13 @@ class TestSnakeInit:
     def test_default_dimensions(self):
         """Test that normal dimensions are stored correctly."""
         game = Snake(40, 22)
-        assert game.width == 40
+        assert game.width == 20  # 40 // 2 (2 cols per cell)
         assert game.height == 20  # height - 2 for status
 
     def test_minimum_dimensions(self):
         """Test that small values are clamped to minimums."""
         game = Snake(5, 5)
-        assert game.width == 15
+        assert game.width == 10  # min 10 cells
         assert game.height == 10
 
     def test_initial_snake_length(self):
@@ -61,7 +64,7 @@ class TestSnakeTick:
         game = Snake(40, 22)
         initial_len = len(game.snake)
         # Remove all pellets to prevent eating
-        game.pellets = []
+        game.pellets = {}
         game.tick()
         assert len(game.snake) == initial_len
 
@@ -70,7 +73,7 @@ class TestSnakeTick:
         game = Snake(40, 22)
         game.direction = "l"
         old_head = game.snake[0]
-        game.pellets = []  # remove pellets to prevent eating
+        game.pellets = {}  # remove pellets to prevent eating
         game.tick()
         new_head = game.snake[0]
         assert new_head[0] == (old_head[0] + 1) % game.width
@@ -82,7 +85,7 @@ class TestSnakeTick:
         game.direction = "l"
         # Place head at right edge
         game.snake = [(game.width - 1, 10), (game.width - 2, 10), (game.width - 3, 10)]
-        game.pellets = []
+        game.pellets = {}
         game.tick()
         assert game.snake[0] == (0, 10)
 
@@ -92,7 +95,7 @@ class TestSnakeTick:
         game.direction = "j"
         # Place head at bottom edge
         game.snake = [(10, game.height - 1), (10, game.height - 2), (10, game.height - 3)]
-        game.pellets = []
+        game.pellets = {}
         game.tick()
         assert game.snake[0] == (10, 0)
 
@@ -114,7 +117,7 @@ class TestSnakeEating:
         game.direction = "l"
         head_x, head_y = game.snake[0]
         next_pos = ((head_x + 1) % game.width, head_y)
-        game.pellets = [next_pos]
+        game.pellets = {next_pos: PELLET_EMOJIS[0]}
         game.tick()
         assert game.score == 1
 
@@ -124,7 +127,7 @@ class TestSnakeEating:
         game.direction = "l"
         head_x, head_y = game.snake[0]
         next_pos = ((head_x + 1) % game.width, head_y)
-        game.pellets = [next_pos]
+        game.pellets = {next_pos: PELLET_EMOJIS[0]}
         old_len = len(game.snake)
         game.tick()
         # Snake should start growing (grow_pending set)
@@ -136,7 +139,7 @@ class TestSnakeEating:
         game.direction = "l"
         head_x, head_y = game.snake[0]
         next_pos = ((head_x + 1) % game.width, head_y)
-        game.pellets = [next_pos]
+        game.pellets = {next_pos: PELLET_EMOJIS[0]}
         game.tick()
         # Should have spawned 2 new pellets (old one eaten)
         assert len(game.pellets) == 2
@@ -158,7 +161,7 @@ class TestSnakeCollision:
             (6, 6),   # below right
         ]
         game.direction = "l"  # moving right
-        game.pellets = []
+        game.pellets = {}
         game.tick()  # head moves to (6, 5) which is occupied
         assert game.is_game_over() is True
 
@@ -197,6 +200,32 @@ class TestSnakeHandleInput:
         game.handle_input("x")
         assert game.direction == "l"
 
+    def test_wasd_keys(self):
+        """Test that w/a/s/d map to k/h/j/l directions."""
+        game = Snake(40, 22)
+        game.direction = "l"  # moving right
+        game.handle_input("w")  # up
+        assert game.direction == "k"
+
+        game.direction = "l"
+        game.handle_input("s")  # down
+        assert game.direction == "j"
+
+        game.direction = "k"  # moving up
+        game.handle_input("a")  # left
+        assert game.direction == "h"
+
+        game.direction = "k"
+        game.handle_input("d")  # right
+        assert game.direction == "l"
+
+    def test_wasd_cannot_reverse(self):
+        """Test that WASD keys also respect opposite-direction restriction."""
+        game = Snake(40, 22)
+        game.direction = "l"  # moving right
+        game.handle_input("a")  # left (opposite)
+        assert game.direction == "l"  # unchanged
+
 
 class TestSnakeGetFrame:
     """Tests for Snake.get_frame method."""
@@ -215,32 +244,34 @@ class TestSnakeGetFrame:
         # height grid rows + blank + status = height + 2
         assert len(frame) == game.height + 2
 
-    def test_frame_shows_snake_head(self):
-        """Test that the snake head character appears in the frame."""
+    def test_frame_shows_rabbit_head(self):
+        """Test that the rabbit head emoji appears in the frame."""
         game = Snake(40, 22)
         frame = game.get_frame()
         grid_text = "".join(frame[:game.height])
-        assert "@" in grid_text
+        assert "\U0001f430" in grid_text
 
-    def test_frame_shows_snake_body(self):
-        """Test that the snake body character appears in the frame."""
+    def test_frame_shows_tail(self):
+        """Test that the white tail emoji appears for all body segments."""
         game = Snake(40, 22)
         frame = game.get_frame()
         grid_text = "".join(frame[:game.height])
-        assert "#" in grid_text
+        assert CELL_TAIL in grid_text
+        # Body has 2 segments (length 3 minus head), so tail emoji appears twice
+        assert grid_text.count(CELL_TAIL) == 2
 
     def test_frame_shows_pellets(self):
-        """Test that pellet characters appear in the frame."""
+        """Test that a pellet emoji appears in the frame."""
         game = Snake(40, 22)
         frame = game.get_frame()
         grid_text = "".join(frame[:game.height])
-        assert "*" in grid_text
+        assert any(e in grid_text for e in PELLET_EMOJIS)
 
     def test_frame_has_status_line(self):
         """Test that status line shows game name, score, and cancel."""
         game = Snake(40, 22)
         frame = game.get_frame()
-        assert "Snake" in frame[-1]
+        assert "Rabbit" in frame[-1]
         assert "Score" in frame[-1]
         assert "[c]" in frame[-1]
 
@@ -250,14 +281,29 @@ class TestSnakeSpawnPellets:
 
     def test_no_spawn_when_grid_full(self):
         """Test that _spawn_pellets is a no-op when no cells are available."""
-        game = Snake(15, 12)  # minimum size: 15x10 grid
+        game = Snake(20, 12)  # minimum size: 10x10 grid
         # Fill every cell with the snake body
         game.snake = [
             (x, y) for y in range(game.height) for x in range(game.width)
         ]
-        game.pellets = []
+        game.pellets = {}
         game._spawn_pellets(5)
-        assert game.pellets == []
+        assert len(game.pellets) == 0
+
+    def test_pellets_are_random_emojis(self):
+        """Test that spawned pellets use emojis from PELLET_EMOJIS."""
+        game = Snake(40, 22)
+        for emoji in game.pellets.values():
+            assert emoji in PELLET_EMOJIS
+
+    def test_pellets_stored_as_dict(self):
+        """Test that pellets map positions to emoji strings."""
+        game = Snake(40, 22)
+        assert isinstance(game.pellets, dict)
+        assert len(game.pellets) == INITIAL_PELLETS
+        for pos, emoji in game.pellets.items():
+            assert isinstance(pos, tuple)
+            assert isinstance(emoji, str)
 
 
 class TestSnakeGameOver:
