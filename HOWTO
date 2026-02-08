@@ -1,31 +1,19 @@
 # List of various instrutions for setup/config
 
-* Develop on the cli (localhost)
+# Local development
+> Develop on the cli (localhost)
 >> cd ~/dev/vim4rabbit
 >> claude
 
-* Claude + Jira Authentication (local laptop, not docker dev container)
-> Atlassian.com > Profile > Security > API Tokens >
->> # Install official Atlassian Rovo MCP servier with Claude CLI
-
-# approach #1 (works best)
+# Setup Jira
+> Atlassian.com > Profile > Security > API Tokens > create token
+>> # Install official Atlassian MCP servier with Claude CLI
 claude mcp add --transport sse atlassian https://mcp.atlassian.com/v1/sse -s user
 claude:  /mcp | atlassian | authenticate/connect
 
-# approach #2 (alternate / iffy)
-claude mcp add rovodev-cli -- npx -y @jaggerxtrm/rovodev-mcp-tool
-claude mcp list  # test
-brew install jira-cli
-export JIRA_API_TOKEN # .bash_profile
-jira init
-
-
-
-Python/Testing
-* dev: cd /app && pytest . -v
-
-
+# Setup pytest framework
 # allow direnv tool to un/load env vars for setting up python test env framework
+# -- Only need to run this once;  it will error the first time and mention running 'direnv allow'
 cd ~/dev/vim4rabbit && direnv allow
 python -m pytest tests/ -v
 
