@@ -32,7 +32,11 @@ class CoffeeCup:
         self._fresh = True  # show steam on first cycle
 
     def tick(self) -> None:
-        """Drain one row or show steam."""
+        """
+        Advance the cup animation by one tick, either draining a row or advancing steam.
+        
+        If the cup is currently steaming (steam_ticks > 0), increment steam_ticks and reset it to 0 when it exceeds steam_max. Otherwise, decrement fill_level by one; if fill_level becomes 0, refill it to interior_rows and start steam by setting steam_ticks to 1.
+        """
         # Show steam while cup is full
         if self.steam_ticks > 0:
             self.steam_ticks += 1
