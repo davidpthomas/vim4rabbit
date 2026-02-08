@@ -9,6 +9,7 @@ from vim4rabbit.games import (
     get_tick_rate,
     tick_game,
     input_game,
+    get_game_match_patterns,
     GAME_REGISTRY,
 )
 
@@ -28,6 +29,7 @@ class TestGetGameMenu:
         assert "Coffee Break!" in full_text
         assert "Snake" in full_text
         assert "Global Thermonuclear War" in full_text
+        assert "Enter the Matrix" in full_text
 
     def test_contains_key_hints(self):
         lines = get_game_menu()
@@ -36,6 +38,7 @@ class TestGetGameMenu:
         assert "[b]" in full_text
         assert "[s]" in full_text
         assert "[w]" in full_text
+        assert "[m]" in full_text
         assert "[c] to go back" in full_text
 
 
@@ -163,6 +166,41 @@ class TestGameOverFrames:
         assert "GAME OVER" in full
 
 
+class TestGetGameMatchPatterns:
+    """Tests for get_game_match_patterns function."""
+
+    def setup_method(self):
+        stop_game()
+
+    def teardown_method(self):
+        stop_game()
+
+    def test_no_active_game_returns_empty(self):
+        assert get_game_match_patterns() == []
+
+    def test_game_without_patterns_returns_empty(self):
+        start_game("z", 40, 20)
+        assert get_game_match_patterns() == []
+
+    def test_matrix_returns_patterns(self):
+        start_game("m", 40, 20)
+        patterns = get_game_match_patterns()
+        assert len(patterns) == 4
+        groups = [p[0] for p in patterns]
+        assert "MatrixTrail" in groups
+        assert "MatrixBody" in groups
+        assert "MatrixHead" in groups
+        assert "MatrixWhite" in groups
+
+    def test_matrix_patterns_are_valid_vim_regex(self):
+        start_game("m", 40, 20)
+        for group, pattern in get_game_match_patterns():
+            is_bracket = pattern.startswith("[") and pattern.endswith("]")
+            is_alternation = (pattern.startswith("\\%(")
+                              and pattern.endswith("\\)"))
+            assert is_bracket or is_alternation
+
+
 class TestGameRegistry:
     """Tests for GAME_REGISTRY."""
 
@@ -171,6 +209,7 @@ class TestGameRegistry:
         assert "b" in GAME_REGISTRY
         assert "s" in GAME_REGISTRY
         assert "w" in GAME_REGISTRY
+        assert "m" in GAME_REGISTRY
 
     def test_registry_structure(self):
         for key, (name, cls, tick_ms) in GAME_REGISTRY.items():

@@ -12,6 +12,7 @@ from .coffee_cup import CoffeeCup
 from .snake import Snake
 from .pong import Pong
 from .wargames import WarGames
+from .matrix import Matrix
 
 # Module-level state
 _active_game = None  # type: Optional[object]
@@ -23,6 +24,7 @@ GAME_REGISTRY = {
     "s": ("Snake", Snake, 200),
     "p": ("Pong", Pong, 100),
     "w": ("Global Thermonuclear War", WarGames, 200),
+    "m": ("Enter the Matrix", Matrix, 143),
 }
 
 
@@ -39,6 +41,7 @@ def get_game_menu() -> List[str]:
         "   ║   [z]  Zen Spiral                          ║",
         "   ║   [s]  Snake                               ║",
         "   ║   [p]  Pong                                ║",
+        "   ║   [m]  Enter the Matrix                    ║",
         "   ║   [w]  Global Thermonuclear War            ║",
         "   ║                                            ║",
         "   ║   Press key to start game                  ║",
@@ -95,3 +98,10 @@ def input_game(key: str) -> List[str]:
     if _active_game.is_game_over():
         return _active_game.get_game_over_frame()
     return _active_game.get_frame()
+
+
+def get_game_match_patterns() -> List[List[str]]:
+    """Get highlight match patterns from the active game, if supported."""
+    if _active_game is not None and hasattr(_active_game, "get_match_patterns"):
+        return _active_game.get_match_patterns()
+    return []

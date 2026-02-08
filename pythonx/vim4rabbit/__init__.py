@@ -22,6 +22,7 @@ from .content import (
     render_help,
 )
 from .games import (
+    get_game_match_patterns,
     get_game_menu,
     get_tick_rate,
     input_game,
@@ -346,3 +347,15 @@ def vim_input_game(key: str) -> List[str]:
     Called from VimScript: py3eval('vim4rabbit.vim_input_game(key)')
     """
     return input_game(key)
+
+
+def vim_get_game_match_patterns() -> List[List[str]]:
+    """
+    Get highlight match patterns from the active game.
+
+    Called from VimScript: py3eval('vim4rabbit.vim_get_game_match_patterns()')
+
+    Returns:
+        List of [highlight_group, vim_regex_pattern] pairs, or empty list.
+    """
+    return get_game_match_patterns()
