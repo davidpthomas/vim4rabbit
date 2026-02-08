@@ -171,6 +171,7 @@ class TestWarGamesGetFrame:
         full = "\n".join(frame)
         assert "PROFESSOR FALKEN" in full
         assert "PASSWORD" in full
+        assert "[c] cancel" in full
 
     def test_globe_frame(self):
         game = WarGames(60, 30)
@@ -181,6 +182,7 @@ class TestWarGamesGetFrame:
         assert "W.O.P.R." in full
         assert "DEFCON" in full
         assert "[x]" in full
+        assert "[c] cancel" in full
 
     def test_missile_frame(self):
         game = WarGames(60, 30)
@@ -190,6 +192,7 @@ class TestWarGamesGetFrame:
         frame = game.get_frame()
         full = "\n".join(frame)
         assert "LAUNCHING" in full
+        assert "[c] cancel" in full
 
     def test_game_over_frame(self):
         game = WarGames(60, 30)
@@ -200,6 +203,7 @@ class TestWarGamesGetFrame:
         assert "NOT TO PLAY" in full
         assert "CHESS" in full
         assert "[o]" in full
+        assert "[c] cancel" in full
 
     def test_password_error_shown(self):
         game = WarGames(60, 30)

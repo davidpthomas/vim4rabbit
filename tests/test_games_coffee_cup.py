@@ -89,7 +89,8 @@ class TestCoffeeCupGetFrame:
         frame = game.get_frame()
         full_text = "\n".join(frame)
         assert "Coffee from Uganda!" in full_text
-        assert "[c]" in full_text
+        assert "Coffee Break!" in full_text
+        assert "[c] cancel" in full_text
 
     def test_full_cup_has_filled_interior(self):
         game = CoffeeCup(40, 20)

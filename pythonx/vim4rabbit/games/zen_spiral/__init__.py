@@ -18,7 +18,7 @@ class ZenSpiral:
 
     def __init__(self, width: int, height: int) -> None:
         self.width = max(width, 10)
-        self.height = max(height, 10)
+        self.height = max(height - 2, 10)
         self.theta = 0.0
         self.a = 0.0
         self.b = 0.5
@@ -58,15 +58,9 @@ class ZenSpiral:
             if 0 <= x < self.width and 0 <= y < self.height:
                 grid[y][x] = SPIRAL_CHARS[char_idx]
 
-        # Place [c]ancel hint in the lower-right corner of the grid
-        hint = "[c]ancel"
-        last_row = grid[self.height - 1]
-        start = self.width - len(hint)
-        if start >= 0:
-            for i, ch in enumerate(hint):
-                last_row[start + i] = ch
-
         lines = ["".join(row) for row in grid]
+        lines.append("")
+        lines.append("  Zen Spiral  |  [c] cancel")
         return lines
 
     def is_game_over(self) -> bool:

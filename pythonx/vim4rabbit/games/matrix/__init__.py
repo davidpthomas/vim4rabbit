@@ -236,7 +236,7 @@ class Matrix:
             else:
                 entry = " " + entry
             labels.append(entry)
-        lines.append("  ".join(labels) + "   [c]ancel")
+        lines.append("  Enter the Matrix  |  " + "  ".join(labels) + "  |  [c] cancel")
         return lines
 
     def get_match_patterns(self) -> List[List[str]]:

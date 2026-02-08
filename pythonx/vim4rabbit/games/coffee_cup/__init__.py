@@ -123,7 +123,7 @@ class CoffeeCup:
         lines.append("")
         lines.append(self._pad("Coffee from Uganda!"))
         lines.append("")
-        lines.append("[c] cancel")
+        lines.append("  Coffee Break!  |  [c] cancel")
         return lines
 
     def is_game_over(self) -> bool:

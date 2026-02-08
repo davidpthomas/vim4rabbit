@@ -141,9 +141,10 @@ class WarGames:
         lines.append("   ║                                         ║")
         lines.append(f"   ║   {msg:<37}  ║")
         lines.append("   ║                                         ║")
-        lines.append("   ║   [c] cancel                            ║")
         lines.append("   ║                                         ║")
         lines.append("   ╚═════════════════════════════════════════╝")
+        lines.append("")
+        lines.append("  WarGames  |  Type password  |  [c] cancel")
 
         return lines
 
@@ -168,9 +169,9 @@ class WarGames:
             lines.append("")
 
         remaining = MAX_LAUNCHES - self.launches
-        lines.append(
-            f"   [x] LAUNCH ({remaining} remaining)  |  [c] cancel"
-        )
+        lines.append(f"   [x] LAUNCH ({remaining} remaining)")
+        lines.append("")
+        lines.append("  WarGames  |  [c] cancel")
 
         return lines
 
@@ -207,7 +208,7 @@ class WarGames:
         for i, t in enumerate(self.ai_targets):
             lines.append(f"   WOPR >> MISSILE #{i + 1} -> {t}")
         lines.append("")
-        lines.append("   [x] LAUNCH  |  [c] cancel")
+        lines.append("  WarGames  |  [c] cancel")
 
         return lines
 
@@ -242,6 +243,8 @@ class WarGames:
         lines.append("        ║        [o] OK. Good decision.         ║")
         lines.append("        ║                                       ║")
         lines.append("        ╚═══════════════════════════════════════╝")
+        lines.append("")
+        lines.append("  WarGames  |  [o] OK  |  [c] cancel")
 
         return lines
 
@@ -266,8 +269,9 @@ class WarGames:
         lines.append("    ║   ██     ██  ██ ██   ██ ██ ██     ██            ║")
         lines.append("    ║    █████ ██  ██  █████  ██  █████ ██████ ██     ║")
         lines.append("    ║                                                  ║")
-        lines.append("    ║                  [c] cancel                      ║")
         lines.append("    ║                                                  ║")
         lines.append("    ╚══════════════════════════════════════════════════╝")
+        lines.append("")
+        lines.append("  WarGames  |  [c] cancel")
 
         return lines

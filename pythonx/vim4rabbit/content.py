@@ -239,7 +239,7 @@ def render_help(width: int) -> List[str]:
         content.append(f"  [{key}] {desc}")
 
     # Bottom line with quit on the right
-    quit_text = "[q] Quit"
+    quit_text = "[c] Close"
     padding = width - len(quit_text) - 4
     content.append(" " * padding + quit_text + "  ")
 
@@ -314,7 +314,7 @@ def format_review_output(result: ReviewResult, elapsed_secs: int = 0) -> List[st
                 content.append("")
 
     # Footer with keybinding hints
-    content.append("  [za] toggle fold | [Space] toggle select | [\\c] claude | [q] close")
+    content.append("  [za] toggle fold | [Space] toggle select | [\\c] claude | [c] close")
 
     return content
 
@@ -347,7 +347,7 @@ def format_cancelled_message() -> List[str]:
         "",
         "  \u2717 Review cancelled",  # X mark
         "",
-        "  Press [q] to close",
+        "  Press [c] to close",
     ]
 
 
@@ -498,7 +498,7 @@ def get_no_work_animation_frame(frame_number: int) -> List[str]:
     ]
     content.extend(rabbit_lines)
     content.append("")
-    content.append("  Press [q] to close")
+    content.append("  Press [c] to close")
 
     return content
 
