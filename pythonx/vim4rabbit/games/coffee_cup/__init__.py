@@ -64,9 +64,23 @@ class CoffeeCup:
         """Render the coffee cup centered in the buffer."""
         lines: List[str] = []
 
-        rim = ".---" + "-" * CUP_WIDTH + "---."
-        base = "'---" + "-" * CUP_WIDTH + "---'"
-        bottom = "\\" + "_" * (CUP_WIDTH - 2) + "/"
+        # Handle prefix for each interior row (0-indexed)
+        # Handle spans rows 1-6 on the left side
+        hp = "     "  # no handle (5 spaces)
+        handle = {
+            0: hp,
+            1: " ____",
+            2: "|    ",
+            3: "|    ",
+            4: "|    ",
+            5: "|    ",
+            6: "|____",
+            7: hp,
+        }
+
+        rim = hp + ".---" + "-" * CUP_WIDTH + "---."
+        base = hp + "'---" + "-" * CUP_WIDTH + "---'"
+        bottom = hp + "  \\" + "_" * (CUP_WIDTH - 2) + "/"
 
         # Steam (while cup is full)
         if self.steam_ticks > 0:
@@ -100,14 +114,16 @@ class CoffeeCup:
                 interior = " " * CUP_WIDTH
             else:
                 interior = self._make_fill_row()
-            lines.append(self._pad("|" + interior + "|"))
+            lines.append(self._pad(handle[row_idx] + "|" + interior + "|"))
 
         # Cup base
         lines.append(self._pad(base))
         lines.append(self._pad(bottom))
 
         lines.append("")
-        lines.append("  Coffee from Uganda  |  [c] cancel")
+        lines.append(self._pad("Coffee from Uganda!"))
+        lines.append("")
+        lines.append("[c] cancel")
         return lines
 
     def is_game_over(self) -> bool:

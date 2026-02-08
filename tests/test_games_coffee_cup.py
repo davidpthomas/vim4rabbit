@@ -87,8 +87,9 @@ class TestCoffeeCupGetFrame:
     def test_frame_has_status_line(self):
         game = CoffeeCup(40, 20)
         frame = game.get_frame()
-        assert "Coffee from Uganda" in frame[-1]
-        assert "[c]" in frame[-1]
+        full_text = "\n".join(frame)
+        assert "Coffee from Uganda" in full_text
+        assert "[c]" in full_text
 
     def test_full_cup_has_filled_interior(self):
         game = CoffeeCup(40, 20)
@@ -96,10 +97,14 @@ class TestCoffeeCupGetFrame:
         filled_rows = []
         for line in frame:
             stripped = line.strip()
-            if stripped.startswith("|") and stripped.endswith("|"):
-                interior = stripped[1:-1]
-                if interior.strip():
-                    filled_rows.append(interior)
+            # Find cup interior between last |...| pair
+            if stripped.endswith("|"):
+                last = len(stripped) - 1
+                second = stripped.rfind("|", 0, last)
+                if second >= 0 and (last - second - 1) == CUP_WIDTH:
+                    interior = stripped[second + 1:last]
+                    if interior.strip():
+                        filled_rows.append(interior)
         assert len(filled_rows) == game.interior_rows
 
     def test_drained_rows_are_empty(self):
@@ -110,10 +115,13 @@ class TestCoffeeCupGetFrame:
         empty_rows = []
         for line in frame:
             stripped = line.strip()
-            if stripped.startswith("|") and stripped.endswith("|"):
-                interior = stripped[1:-1]
-                if not interior.strip():
-                    empty_rows.append(interior)
+            if stripped.endswith("|"):
+                last = len(stripped) - 1
+                second = stripped.rfind("|", 0, last)
+                if second >= 0 and (last - second - 1) == CUP_WIDTH:
+                    interior = stripped[second + 1:last]
+                    if not interior.strip():
+                        empty_rows.append(interior)
         assert len(empty_rows) == 2
 
     def test_steam_frame_shows_sip(self):

@@ -854,7 +854,7 @@ function! vim4rabbit#ShowGameMenu()
 
     " Set up menu keymaps on game buffer
     nnoremap <buffer> <silent> z :call vim4rabbit#StartGame('z')<CR>
-    nnoremap <buffer> <silent> e :call vim4rabbit#StartGame('e')<CR>
+    nnoremap <buffer> <silent> b :call vim4rabbit#StartGame('b')<CR>
     nnoremap <buffer> <silent> s :call vim4rabbit#StartGame('s')<CR>
     nnoremap <buffer> <silent> p :call vim4rabbit#StartGame('p')<CR>
     nnoremap <buffer> <silent> w :call vim4rabbit#StartGame('w')<CR>
