@@ -22,7 +22,7 @@ class ZenSpiral:
         self.theta = 0.0
         self.a = 0.0
         self.b = 0.5
-        self.step = 0.3
+        self.step = 0.375
         self.points: list = []  # list of (x, y, char_idx)
         self._game_over = False
 
