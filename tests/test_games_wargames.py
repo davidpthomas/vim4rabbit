@@ -199,7 +199,7 @@ class TestWarGamesGetFrame:
         assert "ONLY WINNING MOVE" in full
         assert "NOT TO PLAY" in full
         assert "CHESS" in full
-        assert "[c]" in full
+        assert "[o]" in full
 
     def test_password_error_shown(self):
         game = WarGames(60, 30)
@@ -239,3 +239,64 @@ class TestWarGamesGameOver:
         game._game_over = True
         game.handle_input("x")
         assert game.launches == 0
+
+    def test_great_choice_phase(self):
+        """Test pressing 'o' after game over shows Great Choice screen."""
+        game = WarGames(60, 30)
+        game._game_over = True
+        game.handle_input("o")
+        assert game.phase == "great_choice"
+        frame = game.get_game_over_frame()
+        full = "\n".join(frame)
+        assert "cancel" in full
+
+    def test_great_choice_only_once(self):
+        """Test pressing 'o' again while already in great_choice is a no-op."""
+        game = WarGames(60, 30)
+        game._game_over = True
+        game.handle_input("o")
+        assert game.phase == "great_choice"
+        game.handle_input("o")
+        assert game.phase == "great_choice"
+
+
+class TestWarGamesAIMissileFrame:
+    """Tests for AI missile animation rendering."""
+
+    def _launch_and_get_to_ai_anim(self, game):
+        """Helper: enter password, launch, tick through human animation."""
+        for ch in PASSWORD:
+            game.handle_input(ch)
+        game.handle_input("x")
+        for _ in range(5):
+            game.tick()
+
+    def test_ai_missile_frame_shows_wopr(self):
+        """Test missile frame during AI animation shows WOPR label."""
+        game = WarGames(60, 30)
+        self._launch_and_get_to_ai_anim(game)
+        assert game._anim_who == "ai"
+        frame = game.get_frame()
+        full = "\n".join(frame)
+        assert "WOPR" in full
+        assert "LAUNCHING" in full
+
+    def test_ai_targets_shown_in_missile_frame(self):
+        """Test that AI target log lines appear in the missile frame."""
+        game = WarGames(60, 30)
+        self._launch_and_get_to_ai_anim(game)
+        frame = game.get_frame()
+        full = "\n".join(frame)
+        assert "WOPR >> MISSILE #1" in full
+
+
+class TestWarGamesPoolExhausted:
+    """Tests for when the country pool is exhausted."""
+
+    def test_fire_ai_with_empty_pool(self):
+        """Test AI picks a random country when pool is empty."""
+        game = WarGames(60, 30)
+        game._pool.clear()
+        game._fire_ai()
+        assert len(game.ai_targets) == 1
+        assert game.ai_targets[0] in COUNTRIES

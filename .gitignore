@@ -4,3 +4,4 @@ __pycache__/
 tmp/
 .coverage
 .DS_Store
+.envrc

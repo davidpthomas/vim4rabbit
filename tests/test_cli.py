@@ -1,6 +1,7 @@
 """Tests for vim4rabbit.cli module."""
 
-from unittest.mock import patch
+import subprocess
+from unittest.mock import patch, MagicMock
 
 import pytest
 from vim4rabbit.cli import (
@@ -36,6 +37,23 @@ class TestRunCommand:
         output, exit_code = run_command(["sleep", "10"], timeout=1)
         assert exit_code == 1
         assert "timed out" in output.lower()
+
+    @patch("subprocess.run")
+    def test_stderr_only_output(self, mock_run):
+        """Test command that produces stderr but no stdout."""
+        mock_run.return_value = MagicMock(
+            stdout="", stderr="error message", returncode=1
+        )
+        output, exit_code = run_command(["some_cmd"])
+        assert output == "error message"
+        assert exit_code == 1
+
+    @patch("subprocess.run", side_effect=Exception("unexpected failure"))
+    def test_generic_exception(self, mock_run):
+        """Test catch-all exception handling."""
+        output, exit_code = run_command(["some_cmd"])
+        assert output == "unexpected failure"
+        assert exit_code == 1
 
 
 class TestRunCoderabbit:

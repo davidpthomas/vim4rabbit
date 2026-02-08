@@ -62,8 +62,7 @@ class TestZenSpiralGetFrame:
     def test_frame_dimensions(self):
         game = ZenSpiral(40, 20)
         frame = game.get_frame()
-        # height rows + 1 blank + 1 status line
-        assert len(frame) == 22
+        assert len(frame) == game.height
 
     def test_frame_width(self):
         game = ZenSpiral(40, 20)
@@ -74,8 +73,7 @@ class TestZenSpiralGetFrame:
     def test_frame_has_status_line(self):
         game = ZenSpiral(40, 20)
         frame = game.get_frame()
-        assert "Zen Spiral" in frame[-1]
-        assert "[c]" in frame[-1]
+        assert "[c]ancel" in frame[-1]
 
     def test_frame_shows_points(self):
         game = ZenSpiral(40, 20)

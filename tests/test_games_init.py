@@ -134,6 +134,35 @@ class TestInputGame:
         assert len(frame) > 0
 
 
+class TestGameOverFrames:
+    """Tests for game over frame returns in tick_game and input_game."""
+
+    def setup_method(self):
+        stop_game()
+
+    def teardown_method(self):
+        stop_game()
+
+    def test_tick_game_returns_game_over_frame(self):
+        """Test tick_game returns game over frame when game ends."""
+        start_game("s", 40, 20)
+        # Force game over on the snake instance
+        import vim4rabbit.games as gm
+        gm._active_game._game_over = True
+        frame = tick_game()
+        full = "\n".join(frame)
+        assert "GAME OVER" in full
+
+    def test_input_game_returns_game_over_frame(self):
+        """Test input_game returns game over frame when game ends."""
+        start_game("s", 40, 20)
+        import vim4rabbit.games as gm
+        gm._active_game._game_over = True
+        frame = input_game("l")
+        full = "\n".join(frame)
+        assert "GAME OVER" in full
+
+
 class TestGameRegistry:
     """Tests for GAME_REGISTRY."""
 

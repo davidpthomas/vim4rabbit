@@ -166,6 +166,26 @@ class TestParseIssueMetadata:
         assert "src/other.py" not in metadata["prompt"]
         assert metadata["file_path"] == "src/other.py"
 
+    def test_comment_on_next_line(self):
+        """Test Comment: with summary on the following line."""
+        lines = [
+            "File: src/main.py",
+            "Comment:",
+            "The actual summary is here",
+        ]
+        metadata = parse_issue_metadata(lines)
+        assert metadata["summary"] == "The actual summary is here"
+
+    def test_long_summary_truncated(self):
+        """Test that summaries longer than 60 chars are truncated."""
+        long_text = "A" * 80
+        lines = [
+            f"Comment: {long_text}",
+        ]
+        metadata = parse_issue_metadata(lines)
+        assert len(metadata["summary"]) == 60
+        assert metadata["summary"].endswith("...")
+
     def test_no_prompt(self):
         """Test issue without prompt field."""
         lines = [
