@@ -288,7 +288,7 @@ def format_review_output(result: ReviewResult, elapsed_secs: int = 0) -> dict:
                 f"  Found {issue_count} issue(s):  [\U0001F552 {elapsed_str}]"
             )
             content.append("")
-            content.append("  Select an issue with [Space] then press \\c to implement with Claude Code")
+            content.append("  Select an issue with [Space] then press @ to implement with Claude Code")
             content.append("")
 
             for i, issue in enumerate(result.issues, 1):
@@ -318,7 +318,7 @@ def format_review_output(result: ReviewResult, elapsed_secs: int = 0) -> dict:
                 content.append("")
 
     # Footer with keybinding hints
-    content.append("  [za] toggle fold | [Space] toggle select | [\\c] claude | [c] close")
+    content.append("  [za] toggle fold | [Space] toggle select | [@] claude | [c] close")
 
     return {"lines": content, "issue_count": issue_count}
 
