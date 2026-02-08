@@ -231,8 +231,6 @@ class Pong:
             lines.append(f"        ║     Score: {self.left_score} - {self.right_score}                 ║")
             lines.append("        ║                               ║")
             lines.append("        ║     Great game, champion!     ║")
-            lines.append("        ║                               ║")
-            lines.append("        ║     [c] cancel                ║")
             lines.append("        ╚═══════════════════════════════╝")
         else:
             lines.append("        ╔═══════════════════════════════╗")
@@ -241,8 +239,9 @@ class Pong:
             lines.append(f"        ║     Score: {self.left_score} - {self.right_score}                 ║")
             lines.append("        ║                               ║")
             lines.append("        ║     Better luck next time!    ║")
-            lines.append("        ║                               ║")
-            lines.append("        ║     [c] cancel                ║")
             lines.append("        ╚═══════════════════════════════╝")
+
+        lines.append("")
+        lines.append("  Pong  |  [c] cancel")
 
         return lines

@@ -217,3 +217,24 @@ class TestGameRegistry:
             assert callable(cls)
             assert isinstance(tick_ms, int)
             assert tick_ms > 0
+
+
+class TestUniformCancelUX:
+    """Tests for uniform [c] cancel status bar across all games."""
+
+    def setup_method(self):
+        stop_game()
+
+    def teardown_method(self):
+        stop_game()
+
+    @pytest.mark.parametrize("key", list(GAME_REGISTRY.keys()))
+    def test_frame_ends_with_cancel_status_bar(self, key):
+        """Every game's frame should end with a pipe-delimited status bar
+        containing the game name and [c] cancel."""
+        start_game(key, 60, 30)
+        frame = tick_game()
+        assert len(frame) > 0
+        last_line = frame[-1]
+        assert "[c] cancel" in last_line
+        assert "|" in last_line

@@ -1042,6 +1042,14 @@ function! vim4rabbit#CancelGame()
     if s:game_bufnr != -1 && bufexists(s:game_bufnr)
         execute 'bwipeout ' . s:game_bufnr
     endif
+
+    " Focus the review buffer
+    if s:review_bufnr != -1 && bufexists(s:review_bufnr)
+        let l:winnr = bufwinnr(s:review_bufnr)
+        if l:winnr != -1
+            execute l:winnr . 'wincmd w'
+        endif
+    endif
 endfunction
 
 " Stop game timer and clear state

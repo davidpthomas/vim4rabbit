@@ -10,7 +10,7 @@ class TestZenSpiralInit:
     def test_default_dimensions(self):
         game = ZenSpiral(40, 20)
         assert game.width == 40
-        assert game.height == 20
+        assert game.height == 18
 
     def test_minimum_dimensions(self):
         game = ZenSpiral(5, 5)
@@ -62,7 +62,7 @@ class TestZenSpiralGetFrame:
     def test_frame_dimensions(self):
         game = ZenSpiral(40, 20)
         frame = game.get_frame()
-        assert len(frame) == game.height
+        assert len(frame) == game.height + 2
 
     def test_frame_width(self):
         game = ZenSpiral(40, 20)
@@ -73,7 +73,8 @@ class TestZenSpiralGetFrame:
     def test_frame_has_status_line(self):
         game = ZenSpiral(40, 20)
         frame = game.get_frame()
-        assert "[c]ancel" in frame[-1]
+        assert "[c] cancel" in frame[-1]
+        assert "Zen Spiral" in frame[-1]
 
     def test_frame_shows_points(self):
         game = ZenSpiral(40, 20)
@@ -81,7 +82,7 @@ class TestZenSpiralGetFrame:
             game.tick()
         frame = game.get_frame()
         # At least one point should be visible
-        grid_text = "".join(frame[:20])
+        grid_text = "".join(frame[:game.height])
         has_spiral_char = any(c in grid_text for c in SPIRAL_CHARS)
         assert has_spiral_char
 

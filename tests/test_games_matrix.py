@@ -463,7 +463,8 @@ class TestStatusLine:
     def test_status_shows_cancel(self):
         game = Matrix(40, 20)
         frame = game.get_frame()
-        assert "[c]ancel" in frame[-1]
+        assert "[c] cancel" in frame[-1]
+        assert "Enter the Matrix" in frame[-1]
 
     def test_status_marks_active_set(self):
         game = Matrix(40, 20)

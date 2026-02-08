@@ -154,7 +154,7 @@ class Snake:
         lines.append("        ╔═══════════════════════╗")
         lines.append("        ║      GAME OVER!       ║")
         lines.append(f"        ║     Score: {self.score:<10} ║")
-        lines.append("        ║                       ║")
-        lines.append("        ║   [c] cancel          ║")
         lines.append("        ╚═══════════════════════╝")
+        lines.append("")
+        lines.append("  Snake  |  [c] cancel")
         return lines

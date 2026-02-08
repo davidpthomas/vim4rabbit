@@ -40,7 +40,7 @@ class TestRenderHelp:
         """Test that help screen shows quit option."""
         content = render_help(80)
         full_text = "\n".join(content)
-        assert "[q] Quit" in full_text
+        assert "[c] Close" in full_text
 
     def test_help_adapts_to_width(self):
         """Test that help screen adapts to different widths."""
@@ -120,7 +120,7 @@ class TestFormatReviewOutput:
         result = ReviewResult(success=True, issues=[])
         content = format_review_output(result)
         full_text = "\n".join(content)
-        assert "[q] close" in full_text
+        assert "[c] close" in full_text
 
 
 class TestFormatLoadingMessage:
@@ -156,7 +156,7 @@ class TestFormatCancelledMessage:
         """Test that cancelled message shows close option."""
         content = format_cancelled_message()
         full_text = "\n".join(content)
-        assert "[q] to close" in full_text
+        assert "[c] to close" in full_text
 
 
 class TestNoWorkAnimation:
@@ -182,7 +182,7 @@ class TestNoWorkAnimation:
             # Should have header
             assert "coderabbit" in full_text
             # Should have close instruction
-            assert "[q] to close" in full_text
+            assert "[c] to close" in full_text
             # Should have the speech bubble content
             assert "No changes to review" in full_text
             assert "Looking for work" in full_text
