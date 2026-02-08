@@ -34,6 +34,7 @@ let s:game_timer = v:null
 let s:game_active = 0
 let s:game_mode = ''
 let s:game_bufnr = -1
+let s:matrix_match_ids = []
 
 " Main Rabbit command dispatcher
 function! vim4rabbit#Rabbit(subcmd)
@@ -858,6 +859,7 @@ function! vim4rabbit#ShowGameMenu()
     nnoremap <buffer> <silent> s :call vim4rabbit#StartGame('s')<CR>
     nnoremap <buffer> <silent> p :call vim4rabbit#StartGame('p')<CR>
     nnoremap <buffer> <silent> w :call vim4rabbit#StartGame('w')<CR>
+    nnoremap <buffer> <silent> m :call vim4rabbit#StartGame('m')<CR>
     nnoremap <buffer> <silent> c :call vim4rabbit#CancelGame()<CR>
 
     " Remove 'p' from review buffer while game buffer is open
@@ -905,6 +907,7 @@ function! vim4rabbit#StartGame(key)
     silent! nunmap <buffer> s
     silent! nunmap <buffer> p
     silent! nunmap <buffer> w
+    silent! nunmap <buffer> m
 
     " Set up game keymaps — 'c' means cancel/go-back
     nnoremap <buffer> <silent> c :call vim4rabbit#CancelGame()<CR>
@@ -934,6 +937,23 @@ function! vim4rabbit#StartGame(key)
         nnoremap <buffer> <silent> x :call vim4rabbit#GameInput('x')<CR>
     endif
 
+    " Matrix-specific highlighting and char set toggle
+    if a:key ==# 'm'
+        highlight MatrixBg    guifg=#003B00 guibg=#0D0208 ctermfg=22  ctermbg=0
+        highlight MatrixTrail guifg=#003B00 guibg=#0D0208 ctermfg=22  ctermbg=0
+        highlight MatrixBody  guifg=#008F11 guibg=#0D0208 ctermfg=28  ctermbg=0
+        highlight MatrixHead  guifg=#00FF41 guibg=#0D0208 ctermfg=46  ctermbg=0
+        highlight MatrixWhite guifg=#FFFFFF guibg=#0D0208 ctermfg=15  ctermbg=0 gui=bold cterm=bold
+        setlocal nowrap
+        if exists('+wincolor')
+            setlocal wincolor=MatrixBg
+        endif
+        call s:ApplyMatrixPatterns()
+        nnoremap <buffer> <silent> n :call vim4rabbit#GameInput('n')<CR>
+        nnoremap <buffer> <silent> s :call vim4rabbit#GameInput('s')<CR>
+        nnoremap <buffer> <silent> r :call vim4rabbit#GameInput('r')<CR>
+    endif
+
     " Render first frame
     let l:content = py3eval('vim4rabbit.vim_tick_game()')
     setlocal modifiable
@@ -946,6 +966,19 @@ function! vim4rabbit#StartGame(key)
     " Start game timer
     let s:game_timer = timer_start(l:tick_rate, function('s:UpdateGame'), {'repeat': -1})
     redraw
+endfunction
+
+" Apply/reapply matrix highlight match patterns from Python
+function! s:ApplyMatrixPatterns()
+    for l:id in s:matrix_match_ids
+        silent! call matchdelete(l:id)
+    endfor
+    let s:matrix_match_ids = []
+    let l:patterns = py3eval('vim4rabbit.vim_get_game_match_patterns()')
+    for l:pair in l:patterns
+        let l:id = matchadd(l:pair[0], l:pair[1])
+        call add(s:matrix_match_ids, l:id)
+    endfor
 endfunction
 
 " Timer callback for game updates
@@ -991,6 +1024,12 @@ function! vim4rabbit#GameInput(key)
     silent! %delete _
     call setline(1, l:content)
     setlocal nomodifiable
+
+    " Re-apply matrix match patterns after char set change
+    if s:game_mode ==# 'm' && (a:key ==# 'n' || a:key ==# 's' || a:key ==# 'r')
+        call s:ApplyMatrixPatterns()
+    endif
+
     execute l:cur_winnr . 'wincmd w'
     redraw
 endfunction
