@@ -1,1 +1,1 @@
-# vim4rabbit test suite
+"""vim4rabbit test suite."""

@@ -8,32 +8,39 @@ class TestSnakeInit:
     """Tests for Snake initialization."""
 
     def test_default_dimensions(self):
+        """Test that normal dimensions are stored correctly."""
         game = Snake(40, 22)
         assert game.width == 40
         assert game.height == 20  # height - 2 for status
 
     def test_minimum_dimensions(self):
+        """Test that small values are clamped to minimums."""
         game = Snake(5, 5)
         assert game.width == 15
         assert game.height == 10
 
     def test_initial_snake_length(self):
+        """Test that snake starts with length 3."""
         game = Snake(40, 22)
         assert len(game.snake) == 3
 
     def test_initial_pellet_count(self):
+        """Test that initial pellet count matches constant."""
         game = Snake(40, 22)
         assert len(game.pellets) == INITIAL_PELLETS
 
     def test_initial_direction(self):
+        """Test that snake starts moving right."""
         game = Snake(40, 22)
         assert game.direction == "l"  # moving right
 
     def test_initial_score(self):
+        """Test that score starts at zero."""
         game = Snake(40, 22)
         assert game.score == 0
 
     def test_not_game_over_initially(self):
+        """Test that game is not over at start."""
         game = Snake(40, 22)
         assert game.is_game_over() is False
 
@@ -42,6 +49,7 @@ class TestSnakeTick:
     """Tests for Snake.tick method."""
 
     def test_tick_moves_head(self):
+        """Test that a tick moves the snake head."""
         game = Snake(40, 22)
         old_head = game.snake[0]
         game.tick()
@@ -49,6 +57,7 @@ class TestSnakeTick:
         assert old_head != new_head
 
     def test_tick_maintains_length(self):
+        """Test that snake length stays the same when not eating."""
         game = Snake(40, 22)
         initial_len = len(game.snake)
         # Remove all pellets to prevent eating
@@ -57,6 +66,7 @@ class TestSnakeTick:
         assert len(game.snake) == initial_len
 
     def test_tick_moves_right(self):
+        """Test that snake moves right when direction is 'l'."""
         game = Snake(40, 22)
         game.direction = "l"
         old_head = game.snake[0]
@@ -67,6 +77,7 @@ class TestSnakeTick:
         assert new_head[1] == old_head[1]
 
     def test_wraps_horizontally(self):
+        """Test that snake wraps around the right edge."""
         game = Snake(40, 22)
         game.direction = "l"
         # Place head at right edge
@@ -76,6 +87,7 @@ class TestSnakeTick:
         assert game.snake[0] == (0, 10)
 
     def test_wraps_vertically(self):
+        """Test that snake wraps around the bottom edge."""
         game = Snake(40, 22)
         game.direction = "j"
         # Place head at bottom edge
@@ -85,6 +97,7 @@ class TestSnakeTick:
         assert game.snake[0] == (10, 0)
 
     def test_does_not_tick_after_game_over(self):
+        """Test that tick is a no-op when game is over."""
         game = Snake(40, 22)
         game._game_over = True
         old_head = game.snake[0]
@@ -96,6 +109,7 @@ class TestSnakeEating:
     """Tests for pellet eating mechanics."""
 
     def test_eating_pellet_increases_score(self):
+        """Test that eating a pellet increments the score."""
         game = Snake(40, 22)
         game.direction = "l"
         head_x, head_y = game.snake[0]
@@ -105,6 +119,7 @@ class TestSnakeEating:
         assert game.score == 1
 
     def test_eating_pellet_grows_snake(self):
+        """Test that eating a pellet triggers growth."""
         game = Snake(40, 22)
         game.direction = "l"
         head_x, head_y = game.snake[0]
@@ -116,6 +131,7 @@ class TestSnakeEating:
         assert game._grow_pending == GROW_ON_EAT - 1  # one used this tick
 
     def test_eating_spawns_new_pellets(self):
+        """Test that eating a pellet spawns replacement pellets."""
         game = Snake(40, 22)
         game.direction = "l"
         head_x, head_y = game.snake[0]
@@ -130,6 +146,7 @@ class TestSnakeCollision:
     """Tests for self-collision."""
 
     def test_self_collision_game_over(self):
+        """Test that colliding with own body triggers game over."""
         game = Snake(40, 22)
         # Create a snake that will run into itself
         # Snake going right, with body forming a loop
@@ -150,18 +167,21 @@ class TestSnakeHandleInput:
     """Tests for Snake.handle_input."""
 
     def test_change_direction(self):
+        """Test that valid direction input changes snake direction."""
         game = Snake(40, 22)
         game.direction = "l"  # right
         game.handle_input("j")  # down
         assert game.direction == "j"
 
     def test_cannot_reverse(self):
+        """Test that snake cannot reverse into itself."""
         game = Snake(40, 22)
         game.direction = "l"  # right
         game.handle_input("h")  # left (opposite)
         assert game.direction == "l"  # unchanged
 
     def test_all_directions(self):
+        """Test that all four directions can be set."""
         game = Snake(40, 22)
         for d in ["h", "j", "k", "l"]:
             game2 = Snake(40, 22)
@@ -171,6 +191,7 @@ class TestSnakeHandleInput:
             assert game2.direction == d
 
     def test_invalid_key_ignored(self):
+        """Test that unrecognized keys do not change direction."""
         game = Snake(40, 22)
         game.direction = "l"
         game.handle_input("x")
@@ -181,36 +202,42 @@ class TestSnakeGetFrame:
     """Tests for Snake.get_frame method."""
 
     def test_frame_is_list_of_strings(self):
+        """Test that frame returns a list of strings."""
         game = Snake(40, 22)
         frame = game.get_frame()
         assert isinstance(frame, list)
         assert all(isinstance(line, str) for line in frame)
 
     def test_frame_has_correct_grid_rows(self):
+        """Test that frame has height + 2 lines for grid and status."""
         game = Snake(40, 22)
         frame = game.get_frame()
         # height grid rows + blank + status = height + 2
         assert len(frame) == game.height + 2
 
     def test_frame_shows_snake_head(self):
+        """Test that the snake head character appears in the frame."""
         game = Snake(40, 22)
         frame = game.get_frame()
         grid_text = "".join(frame[:game.height])
         assert "@" in grid_text
 
     def test_frame_shows_snake_body(self):
+        """Test that the snake body character appears in the frame."""
         game = Snake(40, 22)
         frame = game.get_frame()
         grid_text = "".join(frame[:game.height])
         assert "#" in grid_text
 
     def test_frame_shows_pellets(self):
+        """Test that pellet characters appear in the frame."""
         game = Snake(40, 22)
         frame = game.get_frame()
         grid_text = "".join(frame[:game.height])
         assert "*" in grid_text
 
     def test_frame_has_status_line(self):
+        """Test that status line shows game name, score, and cancel."""
         game = Snake(40, 22)
         frame = game.get_frame()
         assert "Snake" in frame[-1]
@@ -237,6 +264,7 @@ class TestSnakeGameOver:
     """Tests for Snake game over state."""
 
     def test_game_over_frame(self):
+        """Test that game over frame shows score and GAME OVER text."""
         game = Snake(40, 22)
         game._game_over = True
         game.score = 5

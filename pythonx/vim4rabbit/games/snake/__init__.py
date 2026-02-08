@@ -34,6 +34,7 @@ class Snake:
     """Classic snake game."""
 
     def __init__(self, width: int, height: int) -> None:
+        """Initialize snake, pellets, and board dimensions."""
         # Reserve 2 lines at bottom for status
         self.width = max(width, 15)
         self.height = max(height - 2, 10)

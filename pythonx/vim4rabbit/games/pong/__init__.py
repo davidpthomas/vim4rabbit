@@ -19,6 +19,7 @@ class Pong:
     """Classic pong game with human vs AI."""
 
     def __init__(self, width: int, height: int) -> None:
+        """Initialize paddles, ball, and scoring state."""
         self.width = max(width, 30)
         # Reserve 6 lines at bottom for scoreboard + status
         self.height = max(height - 6, 12)

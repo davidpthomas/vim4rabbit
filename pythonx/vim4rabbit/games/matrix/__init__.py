@@ -108,6 +108,7 @@ class _Column:
                  "rabbit_word", "rabbit_offset")
 
     def __init__(self, height: int) -> None:
+        """Initialize column with random speed, delay, and trail."""
         self.height = height
         self.speed = random.randint(1, 3)
         self.delay = random.randint(0, height)
@@ -119,11 +120,13 @@ class _Column:
         self._maybe_assign_rabbit()
 
     def _maybe_assign_rabbit(self) -> None:
+        """Randomly assign a rabbit-themed word to this column."""
         if random.random() < RABBIT_CHANCE:
             self.rabbit_word = random.choice(RABBIT_WORDS)
             self.rabbit_offset = random.randint(0, max(0, self.trail_len - len(self.rabbit_word)))
 
     def reset(self) -> None:
+        """Re-randomize column parameters for a fresh drop."""
         self.speed = random.randint(1, 3)
         self.delay = random.randint(0, self.height // 2)
         self.head = -self.delay
@@ -138,6 +141,7 @@ class Matrix:
     """Falling digital rain a la The Matrix, with rabbit-hole easter eggs."""
 
     def __init__(self, width: int, height: int) -> None:
+        """Initialize columns and display dimensions."""
         self.width = max(width, MIN_WIDTH)
         self.height = max(height - RESERVED_LINES, MIN_HEIGHT)
         self._game_over = False
