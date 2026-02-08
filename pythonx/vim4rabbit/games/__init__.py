@@ -18,8 +18,8 @@ _active_game = None  # type: Optional[object]
 
 # Game key -> (class, tick_ms)
 GAME_REGISTRY = {
+    "b": ("Coffee Break!", CoffeeCup, 1040),
     "z": ("Zen Spiral", ZenSpiral, 500),
-    "e": ("Coffee from Uganda", CoffeeCup, 1040),
     "s": ("Snake", Snake, 200),
     "p": ("Pong", Pong, 100),
     "w": ("Global Thermonuclear War", WarGames, 200),
@@ -35,8 +35,8 @@ def get_game_menu() -> List[str]:
         "   ║           🎮  Mini-Games  🎮               ║",
         "   ╠════════════════════════════════════════════╣",
         "   ║                                            ║",
+        "   ║   [b]  Coffee Break!                       ║",
         "   ║   [z]  Zen Spiral                          ║",
-        "   ║   [e]  Coffee from Uganda                  ║",
         "   ║   [s]  Snake                               ║",
         "   ║   [p]  Pong                                ║",
         "   ║   [w]  Global Thermonuclear War            ║",

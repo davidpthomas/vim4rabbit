@@ -25,7 +25,7 @@ class TestGetGameMenu:
         lines = get_game_menu()
         full_text = "\n".join(lines)
         assert "Zen Spiral" in full_text
-        assert "Coffee from Uganda" in full_text
+        assert "Coffee Break!" in full_text
         assert "Snake" in full_text
         assert "Global Thermonuclear War" in full_text
 
@@ -33,7 +33,7 @@ class TestGetGameMenu:
         lines = get_game_menu()
         full_text = "\n".join(lines)
         assert "[z]" in full_text
-        assert "[e]" in full_text
+        assert "[b]" in full_text
         assert "[s]" in full_text
         assert "[w]" in full_text
         assert "[c] to go back" in full_text
@@ -79,7 +79,7 @@ class TestGetTickRate:
         assert get_tick_rate("z") == 500
 
     def test_coffee_cup_rate(self):
-        assert get_tick_rate("e") == 1040
+        assert get_tick_rate("b") == 1040
 
     def test_snake_rate(self):
         assert get_tick_rate("s") == 200
@@ -139,7 +139,7 @@ class TestGameRegistry:
 
     def test_all_keys_present(self):
         assert "z" in GAME_REGISTRY
-        assert "e" in GAME_REGISTRY
+        assert "b" in GAME_REGISTRY
         assert "s" in GAME_REGISTRY
         assert "w" in GAME_REGISTRY
 
