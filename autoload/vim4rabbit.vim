@@ -901,7 +901,7 @@ function! vim4rabbit#StartGame(key)
 
     " Clear menu keymaps
     silent! nunmap <buffer> z
-    silent! nunmap <buffer> e
+    silent! nunmap <buffer> b
     silent! nunmap <buffer> s
     silent! nunmap <buffer> p
     silent! nunmap <buffer> w
