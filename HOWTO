@@ -16,4 +16,6 @@ claude:  /mcp | atlassian | authenticate/connect
 # -- Only need to run this once;  it will error the first time and mention running 'direnv allow'
 cd ~/dev/vim4rabbit && direnv allow
 python -m pytest tests/ -v
+# coverage
+.venv/bin/python -m pytest tests/ --cov=vim4rabbit --cov-report=term-missing
 
