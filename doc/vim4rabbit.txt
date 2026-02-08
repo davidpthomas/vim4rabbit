@@ -7,7 +7,8 @@ CONTENTS                                                   *vim4rabbit-contents*
     2. Commands .............................. |vim4rabbit-commands|
     3. Help Screen ........................... |vim4rabbit-help|
     4. Review Panel .......................... |vim4rabbit-review|
-    5. Claude Integration .................... |vim4rabbit-claude|
+    5. Mini-Games ............................ |vim4rabbit-games|
+    6. Claude Integration .................... |vim4rabbit-claude|
 
 ==============================================================================
 1. Introduction                                        *vim4rabbit-introduction*
@@ -16,6 +17,8 @@ vim4rabbit is a Vim plugin with a Python backend that integrates CodeRabbit
 AI code review directly into Vim. It supports reviewing uncommitted, committed,
 or all changes, displays results with collapsible folds, and optionally sends
 selected issues to Claude Code for AI-powered fixes.
+
+Mini-games are available to play while waiting for review results.
 
 ==============================================================================
 2. Commands                                               *vim4rabbit-commands*
@@ -50,6 +53,7 @@ Available keybindings in the help screen:
     ru      Close help and review uncommitted changes
     rc      Close help and review committed changes
     ra      Close help and review all changes
+    c       Close the help screen
     q       Close the help screen
 
 The help screen automatically resizes when the Vim window is resized.
@@ -63,23 +67,56 @@ review runs. Results are shown with collapsible Vim folds and checkboxes for
 issue selection.
 
                                                     *vim4rabbit-review-keybindings*
-Available keybindings in the review panel:
+While loading:
 
     q           Close the panel
-    c           Cancel the running review (while loading)
+    c           Cancel the running review
+    p           Open the mini-games menu
+
+After review completes:
+
+    q           Close the panel
+    c           Close the panel
     <CR> / za   Toggle fold on current issue
     zM          Close all folds
     zR          Open all folds
     <Space>     Toggle issue selection (checkbox)
     \a          Select all issues
     \n          Deselect all issues
-    \c          Launch Claude Code with selected issues
+    @           Launch Claude Code with selected issues
 
 ==============================================================================
-5. Claude Integration                                     *vim4rabbit-claude*
+5. Mini-Games                                              *vim4rabbit-games*
+
+While a review is running, press `p` in the review panel to open the
+mini-games menu. Games run in a split below the review panel and do not
+interrupt the review.
+
+                                                     *vim4rabbit-games-menu*
+Available games:
+
+    b       Coffee Break! - watch a cup of coffee brew
+    z       Zen Spiral - relaxing animated spiral
+    s       Snake - classic snake game
+    p       Pong - paddle ball game
+    m       Enter the Matrix - digital rain animation
+    w       Global Thermonuclear War - WarGames tribute
+
+Press `c` in the game menu or during a game to go back.
+
+                                                  *vim4rabbit-games-controls*
+Game-specific controls:
+
+    Snake:      h/j/k/l to move (vim-style)
+    Pong:       j/k to move paddle
+    WarGames:   j/o/s/h/u/a to enter password, x to launch
+    Matrix:     n/s/r to toggle character sets
+
+==============================================================================
+6. Claude Integration                                     *vim4rabbit-claude*
 
 After a review completes, select one or more issues using <Space> to toggle
-checkboxes. Then press \c to launch Claude Code in a Vim terminal split.
+checkboxes. Then press @ to launch Claude Code in a Vim terminal split.
 The selected issue prompts are passed to Claude for AI-powered resolution.
 
 Use \a to select all issues and \n to deselect all.

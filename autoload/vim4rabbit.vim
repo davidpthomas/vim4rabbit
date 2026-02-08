@@ -108,6 +108,7 @@ function! vim4rabbit#Help()
 
     " Map keybindings for help buffer
     nnoremap <buffer> <silent> q :call vim4rabbit#CloseHelp()<CR>
+    nnoremap <buffer> <silent> c :call vim4rabbit#CloseHelp()<CR>
     nnoremap <buffer> <silent> ru :call vim4rabbit#CloseHelp() \| call vim4rabbit#Review('uncommitted')<CR>
     nnoremap <buffer> <silent> rc :call vim4rabbit#CloseHelp() \| call vim4rabbit#Review('committed')<CR>
     nnoremap <buffer> <silent> ra :call vim4rabbit#CloseHelp() \| call vim4rabbit#Review('all')<CR>

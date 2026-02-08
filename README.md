@@ -18,6 +18,19 @@ No mouse required.
 
 Working with AI-powered code reviews takes time. Rather than staring at a loading screen, vim4rabbit includes a handful of mini-games you can play while you wait. Some last less than a minute, others can keep you going for several minutes -- and you can cancel at any time. What matters most is that while you're waiting for your review results, you have space to think about what's coming next and plan your next set of changes.
 
+Press `p` during a loading review to open the game menu:
+
+| Key | Game | Description |
+|-----|------|-------------|
+| `b` | Coffee Break! | Watch a cup of coffee brew |
+| `z` | Zen Spiral | Relaxing animated spiral |
+| `s` | Snake | Classic snake game (h/j/k/l to move) |
+| `p` | Pong | Paddle ball game (j/k to move) |
+| `m` | Enter the Matrix | Digital rain animation (n/s/r to toggle character sets) |
+| `w` | Global Thermonuclear War | WarGames tribute (j/o/s/h/u/a for password, x to launch) |
+
+Press `c` at any time to go back to the review panel.
+
 ## Screenshots
 
 | Review In Progress | Issues Found | Full Workflow |
@@ -37,7 +50,7 @@ NOTE: Currently under review for public usage circa 2026/02/05
 
 | Command | Description |
 |---------|-------------|
-| `:Rabbit` | Run CodeRabbit review on uncommitted changes (default) |
+| `:Rabbit` | Open the help screen (default) |
 | `:Rabbit review` | Run CodeRabbit review on uncommitted changes |
 | `:Rabbit review uncommitted` | Run CodeRabbit review on uncommitted changes |
 | `:Rabbit review committed` | Run CodeRabbit review on committed changes |
@@ -45,16 +58,21 @@ NOTE: Currently under review for public usage circa 2026/02/05
 
 ### Keybindings
 
-In the review panel:
+While loading:
 - `q` - Close the panel
-- `c` - Cancel the running review (while loading)
+- `c` - Cancel the running review
+- `p` - Open the mini-games menu
+
+After review completes:
+- `q` - Close the panel
+- `c` - Close the panel
 - `<CR>` / `za` - Toggle fold on current issue
 - `zM` - Close all folds
 - `zR` - Open all folds
 - `<Space>` - Toggle issue selection (checkbox)
 - `\a` - Select all issues
 - `\n` - Deselect all issues
-- `\c` - Launch Claude Code with selected issues
+- `@` - Launch Claude Code with selected issues
 
 ## Requirements
 
@@ -157,6 +175,12 @@ vim4rabbit uses a layered architecture separating UI (VimScript) from business l
 │  │ for Vim     │ │             │ │ parsing     │ │ & render  │  │
 │  └─────────────┘ └──────┬──────┘ └─────────────┘ └───────────┘  │
 │                         │                                       │
+│  ┌──────────────┐ ┌─────────────────────────────────────────┐   │
+│  │ selection.py │ │ games/  Mini-games during loading        │   │
+│  │ Issue select │ │ zen_spiral, coffee_cup, snake, pong,     │   │
+│  │ state mgmt   │ │ wargames, matrix                         │   │
+│  └──────────────┘ └─────────────────────────────────────────┘   │
+│                                                                 │
 │  types.py: ReviewIssue, ReviewResult data structures            │
 └─────────────────────────┼───────────────────────────────────────┘
                           │ subprocess
@@ -228,7 +252,15 @@ vim4rabbit/
 │   ├── cli.py                 # CodeRabbit CLI execution
 │   ├── parser.py              # Review output parsing
 │   ├── content.py             # UI content rendering
-│   └── types.py               # Data types
+│   ├── selection.py           # Issue selection state management
+│   ├── types.py               # Data types
+│   └── games/                 # Mini-games during loading
+│       ├── coffee_cup/        # Coffee Break! animation
+│       ├── zen_spiral/        # Zen Spiral animation
+│       ├── snake/             # Snake game
+│       ├── pong/              # Pong game
+│       ├── wargames/          # Global Thermonuclear War
+│       └── matrix/            # Matrix digital rain
 ├── doc/vim4rabbit.txt         # Vim help documentation
 ├── tests/                     # Test suite (pytest)
 ├── dev/                       # Docker development environment
@@ -253,10 +285,14 @@ A Docker-based development environment is available:
 ### Running Tests
 
 ```bash
-./tests/runtests.sh
+python -m pytest tests/ -v
 ```
 
-The test script runs the full test suite followed by a code coverage report showing per-file statement coverage and any uncovered lines.
+Run with coverage report:
+
+```bash
+.venv/bin/python -m pytest tests/ --cov=vim4rabbit --cov-report=term-missing
+```
 
 ## License
 
