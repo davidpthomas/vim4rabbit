@@ -9,7 +9,7 @@ from typing import List, Optional
 
 from .zen_spiral import ZenSpiral
 from .coffee_cup import CoffeeCup
-from .snake import Snake
+from .rabbit import Snake
 from .pong import Pong
 from .wargames import WarGames
 from .matrix import Matrix
@@ -21,7 +21,7 @@ _active_game = None  # type: Optional[object]
 GAME_REGISTRY = {
     "b": ("Coffee Break!", CoffeeCup, 1040),
     "z": ("Zen Spiral", ZenSpiral, 500),
-    "s": ("Snake", Snake, 200),
+    "r": ("Rabbit", Snake, 200),
     "p": ("Pong", Pong, 100),
     "w": ("Global Thermonuclear War", WarGames, 200),
     "m": ("Enter the Matrix", Matrix, 143),
@@ -39,13 +39,12 @@ def get_game_menu() -> List[str]:
         "   ║                                            ║",
         "   ║   [b]  Coffee Break!                       ║",
         "   ║   [z]  Zen Spiral                          ║",
-        "   ║   [s]  Snake                               ║",
+        "   ║   [r]  Rabbit                              ║",
         "   ║   [p]  Pong                                ║",
         "   ║   [m]  Enter the Matrix                    ║",
         "   ║   [w]  Global Thermonuclear War            ║",
         "   ║                                            ║",
-        "   ║   Press key to start game                  ║",
-        "   ║   [c] to go back                           ║",
+        "   ║   [c] to Cancel                            ║",
         "   ║                                            ║",
         "   ╚════════════════════════════════════════════╝",
         "",

@@ -29,7 +29,7 @@ class TestGetGameMenu:
         full_text = "\n".join(lines)
         assert "Zen Spiral" in full_text
         assert "Coffee Break!" in full_text
-        assert "Snake" in full_text
+        assert "Rabbit" in full_text
         assert "Global Thermonuclear War" in full_text
         assert "Enter the Matrix" in full_text
 
@@ -39,10 +39,10 @@ class TestGetGameMenu:
         full_text = "\n".join(lines)
         assert "[z]" in full_text
         assert "[b]" in full_text
-        assert "[s]" in full_text
+        assert "[r]" in full_text
         assert "[w]" in full_text
         assert "[m]" in full_text
-        assert "[c] to go back" in full_text
+        assert "[c] to Cancel" in full_text
 
 
 class TestStartStopGame:
@@ -96,9 +96,9 @@ class TestGetTickRate:
         """Test that coffee cup has 1040ms tick rate."""
         assert get_tick_rate("b") == 1040
 
-    def test_snake_rate(self):
-        """Test that snake has 200ms tick rate."""
-        assert get_tick_rate("s") == 200
+    def test_rabbit_rate(self):
+        """Test that rabbit has 200ms tick rate."""
+        assert get_tick_rate("r") == 200
 
     def test_unknown_key(self):
         """Test that unknown key returns default 500ms tick rate."""
@@ -154,7 +154,7 @@ class TestInputGame:
 
     def test_input_returns_frame(self):
         """Test that input returns a non-empty frame list."""
-        start_game("s", 40, 20)
+        start_game("r", 40, 20)
         frame = input_game("l")
         assert isinstance(frame, list)
         assert len(frame) > 0
@@ -173,7 +173,7 @@ class TestGameOverFrames:
 
     def test_tick_game_returns_game_over_frame(self):
         """Test tick_game returns game over frame when game ends."""
-        start_game("s", 40, 20)
+        start_game("r", 40, 20)
         # Force game over on the snake instance
         import vim4rabbit.games as gm
         gm._active_game._game_over = True
@@ -183,7 +183,7 @@ class TestGameOverFrames:
 
     def test_input_game_returns_game_over_frame(self):
         """Test input_game returns game over frame when game ends."""
-        start_game("s", 40, 20)
+        start_game("r", 40, 20)
         import vim4rabbit.games as gm
         gm._active_game._game_over = True
         frame = input_game("l")
@@ -239,7 +239,7 @@ class TestGameRegistry:
         """Test that all expected game keys are registered."""
         assert "z" in GAME_REGISTRY
         assert "b" in GAME_REGISTRY
-        assert "s" in GAME_REGISTRY
+        assert "r" in GAME_REGISTRY
         assert "w" in GAME_REGISTRY
         assert "m" in GAME_REGISTRY
 

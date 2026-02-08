@@ -1,7 +1,8 @@
 """
-Snake game - Classic snake with h/j/k/l controls.
+Rabbit game - Classic snake with h/j/k/l and w/a/s/d controls.
 
-Snake head @, body #, pellets *.
+Rabbit head 🐰, tail ⚪, pellets 🥕🥬🥦.
+Each grid cell is 2 terminal columns wide to support emoji rendering.
 Wraps around edges, game over on self-collision.
 """
 
@@ -17,6 +18,14 @@ DIRECTIONS = {
     "j": (0, 1),    # down
 }
 
+# WASD aliases → canonical vim keys
+WASD_MAP = {
+    "a": "h",
+    "d": "l",
+    "w": "k",
+    "s": "j",
+}
+
 # Opposite directions (can't reverse into yourself)
 OPPOSITES = {
     "h": "l",
@@ -29,14 +38,25 @@ INITIAL_PELLETS = 5
 PELLETS_ON_EAT = 2
 GROW_ON_EAT = 2
 
+# Cell rendering (each cell = 2 terminal columns)
+CELL_EMPTY = "  "
+CELL_HEAD = "\U0001f430"   # 🐰
+CELL_TAIL = "\u26aa"       # ⚪ white circle (fluffy cotton tail)
+PELLET_EMOJIS = [
+    "\U0001f955",  # 🥕 carrot
+    "\U0001f96c",  # 🥬 lettuce
+    "\U0001f966",  # 🥦 broccoli
+]
+
 
 class Snake:
-    """Classic snake game."""
+    """Classic rabbit (snake) game."""
 
     def __init__(self, width: int, height: int) -> None:
-        """Initialize snake, pellets, and board dimensions."""
+        """Initialize rabbit, pellets, and board dimensions."""
         # Reserve 2 lines at bottom for status
-        self.width = max(width, 15)
+        # Each cell is 2 terminal columns wide (for emoji support)
+        self.width = max(width // 2, 10)
         self.height = max(height - 2, 10)
         self.direction = "l"  # moving right
         self.score = 0
@@ -52,8 +72,8 @@ class Snake:
             (cx - 2, cy),   # tail
         ]
 
-        # Place initial pellets
-        self.pellets: List[Tuple[int, int]] = []
+        # Place initial pellets — dict maps position to emoji
+        self.pellets: dict[Tuple[int, int], str] = {}
         self._spawn_pellets(INITIAL_PELLETS)
 
     def _spawn_pellets(self, count: int) -> None:
@@ -68,8 +88,9 @@ class Snake:
         if not available:
             return
         count = min(count, len(available))
-        new_pellets = random.sample(available, count)
-        self.pellets.extend(new_pellets)
+        new_positions = random.sample(available, count)
+        for pos in new_positions:
+            self.pellets[pos] = random.choice(PELLET_EMOJIS)
 
     def tick(self) -> None:
         """Move snake one step."""
@@ -97,7 +118,7 @@ class Snake:
 
         # Check pellet
         if new_head in self.pellets:
-            self.pellets.remove(new_head)
+            del self.pellets[new_head]
             self.score += 1
             self._grow_pending += GROW_ON_EAT
             self._spawn_pellets(PELLETS_ON_EAT)
@@ -109,33 +130,34 @@ class Snake:
             self.snake.pop()
 
     def handle_input(self, key: str) -> None:
-        """Handle direction input (h/j/k/l)."""
+        """Handle direction input (h/j/k/l or w/a/s/d)."""
+        key = WASD_MAP.get(key, key)
         if key in DIRECTIONS and key != OPPOSITES.get(self.direction):
             self.direction = key
 
     def get_frame(self) -> List[str]:
-        """Render current game state."""
-        grid = [[" "] * self.width for _ in range(self.height)]
+        """Render current game state. Each cell is 2 terminal columns."""
+        grid = [[CELL_EMPTY] * self.width for _ in range(self.height)]
 
-        # Draw pellets
-        for px, py in self.pellets:
+        # Draw pellets (each with its own random emoji)
+        for (px, py), emoji in self.pellets.items():
             if 0 <= px < self.width and 0 <= py < self.height:
-                grid[py][px] = "*"
+                grid[py][px] = emoji
 
-        # Draw snake body
+        # Draw rabbit tail (all body segments)
         for x, y in self.snake[1:]:
             if 0 <= x < self.width and 0 <= y < self.height:
-                grid[y][x] = "#"
+                grid[y][x] = CELL_TAIL
 
-        # Draw snake head
+        # Draw rabbit head
         hx, hy = self.snake[0]
         if 0 <= hx < self.width and 0 <= hy < self.height:
-            grid[hy][hx] = "@"
+            grid[hy][hx] = CELL_HEAD
 
         lines = ["".join(row) for row in grid]
         lines.append("")
         lines.append(
-            f"  Snake  |  Score: {self.score}  |  h/j/k/l to move  |  [c] cancel"
+            f"  Rabbit  |  Score: {self.score}  |  h/j/k/l or w/a/s/d to move  |  [c] cancel"
         )
         return lines
 
@@ -157,5 +179,5 @@ class Snake:
         lines.append(f"        ║     Score: {self.score:<10} ║")
         lines.append("        ╚═══════════════════════╝")
         lines.append("")
-        lines.append("  Snake  |  [c] cancel")
+        lines.append("  Rabbit  |  [c] cancel")
         return lines
