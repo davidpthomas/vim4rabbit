@@ -42,10 +42,10 @@ class CoffeeCup:
 
         if self.fill_level > 0:
             self.fill_level -= 1
-        else:
-            # Cup is empty - refill and start steam
-            self.fill_level = self.interior_rows
-            self.steam_ticks = 1
+            if self.fill_level == 0:
+                # Cup just emptied - refill and start steam
+                self.fill_level = self.interior_rows
+                self.steam_ticks = 1
 
     def handle_input(self, key: str) -> None:
         """No-op: espresso is non-interactive."""

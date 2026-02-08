@@ -199,7 +199,7 @@ class TestWarGamesGetFrame:
         assert "ONLY WINNING MOVE" in full
         assert "NOT TO PLAY" in full
         assert "CHESS" in full
-        assert "[c]" in full
+        assert "[o]" in full
 
     def test_password_error_shown(self):
         game = WarGames(60, 30)

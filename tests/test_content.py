@@ -138,7 +138,7 @@ class TestFormatLoadingMessage:
         """Test that loading message shows cancel option."""
         content = format_loading_message()
         full_text = "\n".join(content)
-        assert "[c] to cancel" in full_text
+        assert "[c] cancel" in full_text
 
 
 class TestFormatCancelledMessage:
