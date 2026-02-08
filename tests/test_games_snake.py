@@ -218,6 +218,21 @@ class TestSnakeGetFrame:
         assert "[c]" in frame[-1]
 
 
+class TestSnakeSpawnPellets:
+    """Tests for pellet spawning edge cases."""
+
+    def test_no_spawn_when_grid_full(self):
+        """Test that _spawn_pellets is a no-op when no cells are available."""
+        game = Snake(15, 12)  # minimum size: 15x10 grid
+        # Fill every cell with the snake body
+        game.snake = [
+            (x, y) for y in range(game.height) for x in range(game.width)
+        ]
+        game.pellets = []
+        game._spawn_pellets(5)
+        assert game.pellets == []
+
+
 class TestSnakeGameOver:
     """Tests for Snake game over state."""
 

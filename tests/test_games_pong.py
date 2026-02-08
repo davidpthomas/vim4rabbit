@@ -283,6 +283,28 @@ class TestPongGameOver:
 class TestPongAI:
     """Tests for AI paddle behavior."""
 
+    def test_deflect_top_of_paddle(self):
+        """Test ball deflects upward when hitting top of paddle."""
+        game = Pong(60, 30)
+        game._serve_delay = 0
+        game.ball_x = game.left_x + 1
+        game.ball_y = game.left_y  # top of paddle
+        game.ball_dx = -1
+        game.ball_dy = 0
+        game.tick()
+        assert game.ball_dy == -1
+
+    def test_deflect_bottom_of_paddle(self):
+        """Test ball deflects downward when hitting bottom of paddle."""
+        game = Pong(60, 30)
+        game._serve_delay = 0
+        game.ball_x = game.left_x + 1
+        game.ball_y = game.left_y + game.paddle_h - 1  # bottom of paddle
+        game.ball_dx = -1
+        game.ball_dy = 0
+        game.tick()
+        assert game.ball_dy == 1
+
     def test_ai_tracks_ball_down(self):
         game = Pong(60, 30)
         game.right_y = 0
