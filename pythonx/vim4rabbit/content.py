@@ -246,7 +246,7 @@ def render_help(width: int) -> List[str]:
     return content
 
 
-def format_review_output(result: ReviewResult, elapsed_secs: int = 0) -> List[str]:
+def format_review_output(result: ReviewResult, elapsed_secs: int = 0) -> dict:
     """
     Format review output for display in buffer with vim folds and checkboxes.
 
@@ -262,9 +262,12 @@ def format_review_output(result: ReviewResult, elapsed_secs: int = 0) -> List[st
         elapsed_secs: Total elapsed seconds for the review command
 
     Returns:
-        List of strings (lines) for the review buffer
+        Dict with keys:
+        - lines: List of strings for the review buffer
+        - issue_count: Number of issues found
     """
     content: List[str] = []
+    issue_count = 0
 
     # Header
     content.append("  \U0001F430 coderabbit")  # rabbit emoji
@@ -279,9 +282,10 @@ def format_review_output(result: ReviewResult, elapsed_secs: int = 0) -> List[st
         if not result.issues:
             content.append("  \u2713 No issues found!")  # checkmark
         else:
+            issue_count = len(result.issues)
             elapsed_str = format_elapsed_time(elapsed_secs)
             content.append(
-                f"  Found {len(result.issues)} issue(s):  [\U0001F552 {elapsed_str}]"
+                f"  Found {issue_count} issue(s):  [\U0001F552 {elapsed_str}]"
             )
             content.append("")
             content.append("  Select an issue with [Space] then press \\c to implement with Claude Code")
@@ -316,7 +320,7 @@ def format_review_output(result: ReviewResult, elapsed_secs: int = 0) -> List[st
     # Footer with keybinding hints
     content.append("  [za] toggle fold | [Space] toggle select | [\\c] claude | [c] close")
 
-    return content
+    return {"lines": content, "issue_count": issue_count}
 
 
 def format_loading_message() -> List[str]:
