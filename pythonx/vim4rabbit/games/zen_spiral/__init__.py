@@ -17,6 +17,7 @@ class ZenSpiral:
     """Archimedean spiral: r = a + b * theta."""
 
     def __init__(self, width: int, height: int) -> None:
+        """Initialize spiral parameters and canvas."""
         self.width = max(width, 10)
         self.height = max(height - 2, 10)
         self.theta = 0.0

@@ -22,6 +22,7 @@ class CoffeeCup:
     """ASCII cup that drains."""
 
     def __init__(self, width: int, height: int) -> None:
+        """Initialize cup dimensions and fill state."""
         self.width = max(width, 30)
         self.height = max(height, 15)
         self.interior_rows = 8

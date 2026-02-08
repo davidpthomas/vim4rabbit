@@ -35,6 +35,7 @@ class WarGames:
     """Global Thermonuclear War - inspired by the 1983 film."""
 
     def __init__(self, width: int, height: int) -> None:
+        """Initialize WOPR state and target pool."""
         self.width = max(width, 50)
         self.height = max(height - 4, 16)
         self._game_over = False

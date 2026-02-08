@@ -18,11 +18,13 @@ class TestGetGameMenu:
     """Tests for get_game_menu function."""
 
     def test_returns_list_of_strings(self):
+        """Test that menu returns a list of strings."""
         lines = get_game_menu()
         assert isinstance(lines, list)
         assert all(isinstance(line, str) for line in lines)
 
     def test_contains_game_options(self):
+        """Test that menu lists all available games."""
         lines = get_game_menu()
         full_text = "\n".join(lines)
         assert "Zen Spiral" in full_text
@@ -32,6 +34,7 @@ class TestGetGameMenu:
         assert "Enter the Matrix" in full_text
 
     def test_contains_key_hints(self):
+        """Test that menu shows key bindings for each game."""
         lines = get_game_menu()
         full_text = "\n".join(lines)
         assert "[z]" in full_text
@@ -46,29 +49,36 @@ class TestStartStopGame:
     """Tests for start_game and stop_game functions."""
 
     def setup_method(self):
+        """Reset game state before each test."""
         stop_game()
 
     def teardown_method(self):
+        """Reset game state after each test."""
         stop_game()
 
     def test_start_valid_game(self):
+        """Test that a valid key starts a game."""
         assert start_game("z", 40, 20) is True
         assert is_game_active() is True
 
     def test_start_invalid_key(self):
+        """Test that an invalid key does not start a game."""
         assert start_game("x", 40, 20) is False
         assert is_game_active() is False
 
     def test_stop_game(self):
+        """Test that stopping a game deactivates it."""
         start_game("z", 40, 20)
         stop_game()
         assert is_game_active() is False
 
     def test_stop_when_no_game(self):
+        """Test that stopping with no active game is a no-op."""
         stop_game()
         assert is_game_active() is False
 
     def test_start_each_game_type(self):
+        """Test that every registered game key starts successfully."""
         for key in GAME_REGISTRY:
             start_game(key, 40, 20)
             assert is_game_active() is True
@@ -79,15 +89,19 @@ class TestGetTickRate:
     """Tests for get_tick_rate function."""
 
     def test_zen_spiral_rate(self):
+        """Test that zen spiral has 500ms tick rate."""
         assert get_tick_rate("z") == 500
 
     def test_coffee_cup_rate(self):
+        """Test that coffee cup has 1040ms tick rate."""
         assert get_tick_rate("b") == 1040
 
     def test_snake_rate(self):
+        """Test that snake has 200ms tick rate."""
         assert get_tick_rate("s") == 200
 
     def test_unknown_key(self):
+        """Test that unknown key returns default 500ms tick rate."""
         assert get_tick_rate("x") == 500
 
 
@@ -95,21 +109,26 @@ class TestTickGame:
     """Tests for tick_game function."""
 
     def setup_method(self):
+        """Reset game state before each test."""
         stop_game()
 
     def teardown_method(self):
+        """Reset game state after each test."""
         stop_game()
 
     def test_tick_no_active_game(self):
+        """Test that tick returns empty list when no game is active."""
         assert tick_game() == []
 
     def test_tick_returns_frame(self):
+        """Test that tick returns a non-empty frame list."""
         start_game("z", 40, 20)
         frame = tick_game()
         assert isinstance(frame, list)
         assert len(frame) > 0
 
     def test_tick_advances_game(self):
+        """Test that successive ticks produce valid frames."""
         start_game("z", 40, 20)
         frame1 = tick_game()
         frame2 = tick_game()
@@ -122,15 +141,19 @@ class TestInputGame:
     """Tests for input_game function."""
 
     def setup_method(self):
+        """Reset game state before each test."""
         stop_game()
 
     def teardown_method(self):
+        """Reset game state after each test."""
         stop_game()
 
     def test_input_no_active_game(self):
+        """Test that input returns empty list when no game is active."""
         assert input_game("h") == []
 
     def test_input_returns_frame(self):
+        """Test that input returns a non-empty frame list."""
         start_game("s", 40, 20)
         frame = input_game("l")
         assert isinstance(frame, list)
@@ -141,9 +164,11 @@ class TestGameOverFrames:
     """Tests for game over frame returns in tick_game and input_game."""
 
     def setup_method(self):
+        """Reset game state before each test."""
         stop_game()
 
     def teardown_method(self):
+        """Reset game state after each test."""
         stop_game()
 
     def test_tick_game_returns_game_over_frame(self):
@@ -170,19 +195,24 @@ class TestGetGameMatchPatterns:
     """Tests for get_game_match_patterns function."""
 
     def setup_method(self):
+        """Reset game state before each test."""
         stop_game()
 
     def teardown_method(self):
+        """Reset game state after each test."""
         stop_game()
 
     def test_no_active_game_returns_empty(self):
+        """Test that no active game returns empty pattern list."""
         assert get_game_match_patterns() == []
 
     def test_game_without_patterns_returns_empty(self):
+        """Test that a game without patterns returns empty list."""
         start_game("z", 40, 20)
         assert get_game_match_patterns() == []
 
     def test_matrix_returns_patterns(self):
+        """Test that matrix game returns four highlight patterns."""
         start_game("m", 40, 20)
         patterns = get_game_match_patterns()
         assert len(patterns) == 4
@@ -193,6 +223,7 @@ class TestGetGameMatchPatterns:
         assert "MatrixWhite" in groups
 
     def test_matrix_patterns_are_valid_vim_regex(self):
+        """Test that matrix patterns use bracket or alternation syntax."""
         start_game("m", 40, 20)
         for group, pattern in get_game_match_patterns():
             is_bracket = pattern.startswith("[") and pattern.endswith("]")
@@ -205,6 +236,7 @@ class TestGameRegistry:
     """Tests for GAME_REGISTRY."""
 
     def test_all_keys_present(self):
+        """Test that all expected game keys are registered."""
         assert "z" in GAME_REGISTRY
         assert "b" in GAME_REGISTRY
         assert "s" in GAME_REGISTRY
@@ -212,6 +244,7 @@ class TestGameRegistry:
         assert "m" in GAME_REGISTRY
 
     def test_registry_structure(self):
+        """Test that each registry entry has name, class, and tick rate."""
         for key, (name, cls, tick_ms) in GAME_REGISTRY.items():
             assert isinstance(name, str)
             assert callable(cls)
@@ -223,9 +256,11 @@ class TestUniformCancelUX:
     """Tests for uniform [c] cancel status bar across all games."""
 
     def setup_method(self):
+        """Reset game state before each test."""
         stop_game()
 
     def teardown_method(self):
+        """Reset game state after each test."""
         stop_game()
 
     @pytest.mark.parametrize("key", list(GAME_REGISTRY.keys()))
