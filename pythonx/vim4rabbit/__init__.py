@@ -395,13 +395,13 @@ def get_message() -> str:
 # =============================================================================
 
 
-def vim_get_game_menu() -> List[str]:
+def vim_get_game_menu(width: int = 80, height: int = 24) -> List[str]:
     """
-    Get the game selection menu.
+    Get the game selection menu, centered in the given dimensions.
 
-    Called from VimScript: py3eval('vim4rabbit.vim_get_game_menu()')
+    Called from VimScript: py3eval('vim4rabbit.vim_get_game_menu(w, h)')
     """
-    return get_game_menu()
+    return get_game_menu(width, height)
 
 
 def vim_start_game(key: str, width: int, height: int) -> int:

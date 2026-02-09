@@ -788,8 +788,10 @@ function! vim4rabbit#ShowGameMenu()
         return
     endif
 
-    " Get menu content from Python
-    let l:content = py3eval('vim4rabbit.vim_get_game_menu()')
+    " Get menu content from Python (centered to game buffer dimensions)
+    let l:width = winwidth(0)
+    let l:height = winheight(0)
+    let l:content = py3eval('vim4rabbit.vim_get_game_menu(' . l:width . ', ' . l:height . ')')
 
     " Write menu content into game buffer (we're already in it after CreateGameBuffer)
     setlocal modifiable
@@ -927,6 +929,9 @@ function! s:ApplyMatrixPatterns()
         let l:id = matchadd(l:pair[0], l:pair[1])
         call add(s:matrix_match_ids, l:id)
     endfor
+    " Status bar in white (priority 11 beats default 10)
+    let l:id = matchadd('MatrixWhite', '.*Enter the Matrix.*', 11)
+    call add(s:matrix_match_ids, l:id)
 endfunction
 
 " Timer callback for game updates

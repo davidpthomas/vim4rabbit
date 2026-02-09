@@ -28,27 +28,37 @@ GAME_REGISTRY = {
 }
 
 
-def get_game_menu() -> List[str]:
-    """Render game selection menu."""
-    return [
-        "",
-        "",
-        "   ╔════════════════════════════════════════════╗",
-        "   ║           🎮  Mini-Games  🎮               ║",
-        "   ╠════════════════════════════════════════════╣",
-        "   ║                                            ║",
-        "   ║   [s]  Snake vs Rabbit! 🐰🐍               ║",
-        "   ║   [m]  Enter the Matrix                    ║",
-        "   ║   [b]  Coffee Break!                       ║",
-        "   ║   [z]  Zen Spiral                          ║",
-        "   ║   [p]  Pong                                ║",
-        "   ║   [w]  Global Thermonuclear War            ║",
-        "   ║                                            ║",
-        "   ║   [c] to Cancel                            ║",
-        "   ║                                            ║",
-        "   ╚════════════════════════════════════════════╝",
-        "",
+def get_game_menu(width: int = 80, height: int = 24) -> List[str]:
+    """Render game selection menu, centered in the given dimensions."""
+    box = [
+        "╔════════════════════════════════════════════╗",
+        "║           🎮  Mini-Games  🎮               ║",
+        "╠════════════════════════════════════════════╣",
+        "║                                            ║",
+        "║   [s]  Snake vs Rabbit! 🐰🐍               ║",
+        "║   [m]  Enter the Matrix                    ║",
+        "║   [b]  Coffee Break!                       ║",
+        "║   [z]  Zen Spiral                          ║",
+        "║   [p]  Pong                                ║",
+        "║   [w]  Global Thermonuclear War            ║",
+        "║                                            ║",
+        "║   [c] to Cancel                            ║",
+        "║                                            ║",
+        "╚════════════════════════════════════════════╝",
     ]
+
+    # Box is 46 visible columns wide (border chars are 1 col each)
+    box_width = 46
+    pad_left = max((width - box_width) // 2, 0)
+    pad_str = " " * pad_left
+
+    centered_box = [pad_str + line for line in box]
+
+    top_pad = max((height - len(box)) // 2, 0)
+
+    lines: List[str] = [""] * top_pad
+    lines.extend(centered_box)
+    return lines
 
 
 def start_game(key: str, width: int, height: int) -> bool:
