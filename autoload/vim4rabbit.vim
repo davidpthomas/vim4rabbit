@@ -865,6 +865,7 @@ function! vim4rabbit#StartGame(key)
         nnoremap <buffer> <silent> s :call vim4rabbit#GameInput('s')<CR>
         nnoremap <buffer> <silent> d :call vim4rabbit#GameInput('d')<CR>
         nnoremap <buffer> <silent> w :call vim4rabbit#GameInput('w')<CR>
+        nnoremap <buffer> <silent> p :call vim4rabbit#GameInput('p')<CR>
     endif
 
     " Pong-specific keymaps (j/k for paddle)

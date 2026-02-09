@@ -21,8 +21,8 @@ _active_game = None  # type: Optional[object]
 GAME_REGISTRY = {
     "b": ("Coffee Break!", CoffeeCup, 1040),
     "z": ("Zen Spiral", ZenSpiral, 500),
-    "r": ("Rabbit", Snake, 200),
-    "p": ("Pong", Pong, 100),
+    "r": ("Rabbit vs Snake", Snake, 200),
+    "p": ("Pong", Pong, 67),
     "w": ("Global Thermonuclear War", WarGames, 200),
     "m": ("Enter the Matrix", Matrix, 143),
 }
@@ -39,7 +39,7 @@ def get_game_menu() -> List[str]:
         "   ║                                            ║",
         "   ║   [b]  Coffee Break!                       ║",
         "   ║   [z]  Zen Spiral                          ║",
-        "   ║   [r]  Rabbit                              ║",
+        "   ║   [r]  Rabbit vs Snake                     ║",
         "   ║   [p]  Pong                                ║",
         "   ║   [m]  Enter the Matrix                    ║",
         "   ║   [w]  Global Thermonuclear War            ║",
