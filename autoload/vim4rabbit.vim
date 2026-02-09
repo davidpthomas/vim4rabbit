@@ -367,14 +367,8 @@ function! s:OnReviewExit(job, exit_status)
     " Capture elapsed time before stopping spinner
     let s:review_elapsed_secs = float2nr(reltimefloat(reltime(s:review_start_time)))
 
-    " Stop the spinner and any active game
+    " Stop the spinner (game keeps running if active)
     call s:StopSpinner()
-    call s:StopGame()
-
-    " Close game buffer if it exists
-    if s:game_bufnr != -1 && bufexists(s:game_bufnr)
-        execute 'bwipeout ' . s:game_bufnr
-    endif
 
     " Clear the job reference
     let s:review_job = v:null
