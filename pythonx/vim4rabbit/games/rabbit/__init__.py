@@ -1,5 +1,5 @@
 """
-Rabbit vs Snake - Rabbit navigates a board with an enemy snake.
+Snake vs Rabbit! - Rabbit navigates a board with an enemy snake.
 
 Rabbit head 🐰, tail ⚪, pellets 🥕🥬🥦.
 Enemy snake head 🐍, tail 🟢, fixed length 13.
@@ -61,7 +61,7 @@ PELLET_EMOJIS = [
 
 
 class Snake:
-    """Rabbit vs Snake game."""
+    """Snake vs Rabbit! game."""
 
     def __init__(self, width: int, height: int) -> None:
         """Initialize rabbit, enemy snake, pellets, and board dimensions."""
@@ -267,7 +267,7 @@ class Snake:
         lines = ["".join(row) for row in grid]
         lines.append("")
         lines.append(
-            f"  Rabbit vs Snake  |  Score: {self.score}  |"
+            f"  Snake vs Rabbit!  |  Score: {self.score}  |"
             "  h/j/k/l or w/a/s/d to move  |  [c] cancel"
         )
         return lines
@@ -288,7 +288,7 @@ class Snake:
             box.append("║" + self._game_over_reason.center(inner_width) + "║")
         box.append("╚" + "═" * inner_width + "╝")
 
-        status = "Rabbit vs Snake  |  [p] play again?  |  [c] cancel"
+        status = "Snake vs Rabbit!  |  [p] play again?  |  [c] cancel"
 
         # Horizontal centering: buffer width in terminal columns = self.width * 2
         buf_cols = self.width * 2

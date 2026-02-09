@@ -320,7 +320,7 @@ class TestSnakeGetFrame:
         """Test that status line shows game name, score, and cancel."""
         game = Snake(40, 22)
         frame = game.get_frame()
-        assert "Rabbit vs Snake" in frame[-1]
+        assert "Snake vs Rabbit!" in frame[-1]
         assert "Score" in frame[-1]
         assert "[c]" in frame[-1]
 
@@ -410,12 +410,12 @@ class TestSnakeGameOver:
         assert "Rabbit hit the snake!" in full_text
 
     def test_game_over_frame_shows_game_name(self):
-        """Test that game over frame shows Rabbit vs Snake."""
+        """Test that game over frame shows Snake vs Rabbit!."""
         game = Snake(40, 22)
         game._game_over = True
         frame = game.get_game_over_frame()
         full_text = "\n".join(frame)
-        assert "Rabbit vs Snake" in full_text
+        assert "Snake vs Rabbit!" in full_text
 
     def test_game_over_frame_shows_play_again(self):
         """Test that game over frame shows play again option."""

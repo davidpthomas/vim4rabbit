@@ -24,7 +24,7 @@ Press `p` during a loading review to open the game menu:
 |-----|------|-------------|
 | `b` | Coffee Break! | Watch a cup of coffee brew |
 | `z` | Zen Spiral | Relaxing animated spiral |
-| `r` | Rabbit | Classic rabbit game (h/j/k/l or w/a/s/d to move) |
+| `s` | Snake vs Rabbit! | Navigate the rabbit while avoiding the enemy snake (h/j/k/l or w/a/s/d to move) |
 | `p` | Pong | Paddle ball game (j/k to move) |
 | `m` | Enter the Matrix | Digital rain animation (n/s/r to toggle character sets) |
 | `w` | Global Thermonuclear War | WarGames tribute (j/o/s/h/u/a for password, x to launch) |
@@ -257,7 +257,7 @@ vim4rabbit/
 │   └── games/                 # Mini-games during loading
 │       ├── coffee_cup/        # Coffee Break! animation
 │       ├── zen_spiral/        # Zen Spiral animation
-│       ├── rabbit/            # Rabbit game
+│       ├── rabbit/            # Snake vs Rabbit! game
 │       ├── pong/              # Pong game
 │       ├── wargames/          # Global Thermonuclear War
 │       └── matrix/            # Matrix digital rain
