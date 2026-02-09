@@ -125,6 +125,37 @@ class TestFormatReviewOutput:
         full_text = "\n".join(output["lines"])
         assert "[c] close" in full_text
 
+    def test_no_issues_only_shows_close(self):
+        """Test that no-issues result only shows [c] close keybinding."""
+        result = ReviewResult(success=True, issues=[])
+        output = format_review_output(result)
+        full_text = "\n".join(output["lines"])
+        assert "[c] close" in full_text
+        assert "[za] toggle fold" not in full_text
+        assert "[Space] toggle select" not in full_text
+        assert "[@] claude" not in full_text
+
+    def test_error_only_shows_close(self):
+        """Test that error result only shows [c] close keybinding."""
+        result = ReviewResult(success=False, error_message="Something failed")
+        output = format_review_output(result)
+        full_text = "\n".join(output["lines"])
+        assert "[c] close" in full_text
+        assert "[za] toggle fold" not in full_text
+        assert "[Space] toggle select" not in full_text
+        assert "[@] claude" not in full_text
+
+    def test_issues_show_full_keybindings(self):
+        """Test that results with issues show all keybinding hints."""
+        issues = [ReviewIssue(lines=["Problem 1"])]
+        result = ReviewResult(success=True, issues=issues)
+        output = format_review_output(result)
+        full_text = "\n".join(output["lines"])
+        assert "[za] toggle fold" in full_text
+        assert "[Space] toggle select" in full_text
+        assert "[@] claude" in full_text
+        assert "[c] close" in full_text
+
 
 class TestFormatLoadingMessage:
     """Tests for format_loading_message function."""
