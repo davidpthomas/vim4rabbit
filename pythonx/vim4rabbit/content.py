@@ -318,7 +318,10 @@ def format_review_output(result: ReviewResult, elapsed_secs: int = 0) -> dict:
                 content.append("")
 
     # Footer with keybinding hints
-    content.append("  [za] toggle fold | [Space] toggle select | [@] claude | [c] close")
+    if issue_count > 0:
+        content.append("  [za] toggle fold | [Space] toggle select | [@] claude | [c] close")
+    else:
+        content.append("  [c] close")
 
     return {"lines": content, "issue_count": issue_count}
 
