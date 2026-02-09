@@ -209,7 +209,7 @@ def get_animation_frame(frame_number: int, elapsed_secs: int = 0) -> List[str]:
 # Help content configuration
 HELP_COMMANDS: List[List[Tuple[str, str]]] = [
     # Column 1
-    [("ru", "Review Uncommitted"), ("rc", "Review Committed"), ("ra", "Review All")],
+    [("u", "Review Uncommitted"), ("c", "Review Committed"), ("a", "Review All")],
 ]
 
 
@@ -239,7 +239,7 @@ def render_help(width: int) -> List[str]:
         content.append(f"  [{key}] {desc}")
 
     # Bottom line with quit on the right
-    quit_text = "[c] Close"
+    quit_text = "[q] Close"
     padding = width - len(quit_text) - 4
     content.append(" " * padding + quit_text + "  ")
 

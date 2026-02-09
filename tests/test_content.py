@@ -29,9 +29,9 @@ class TestRenderHelp:
         """Test that help screen lists available commands."""
         content = render_help(80)
         full_text = "\n".join(content)
-        assert "[ru]" in full_text
-        assert "[rc]" in full_text
-        assert "[ra]" in full_text
+        assert "[u]" in full_text
+        assert "[c]" in full_text
+        assert "[a]" in full_text
         assert "Review Uncommitted" in full_text
         assert "Review Committed" in full_text
         assert "Review All" in full_text
@@ -40,7 +40,7 @@ class TestRenderHelp:
         """Test that help screen shows quit option."""
         content = render_help(80)
         full_text = "\n".join(content)
-        assert "[c] Close" in full_text
+        assert "[q] Close" in full_text
 
     def test_help_adapts_to_width(self):
         """Test that help screen adapts to different widths."""
