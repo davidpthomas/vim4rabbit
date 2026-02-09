@@ -21,8 +21,6 @@ DIRECTIONS = {
     "j": (0, 1),    # down
 }
 
-DIRECTION_KEYS = list(DIRECTIONS.keys())
-
 # WASD aliases → canonical vim keys
 WASD_MAP = {
     "a": "h",
