@@ -176,9 +176,9 @@ vim4rabbit uses a layered architecture separating UI (VimScript) from business l
 │  └─────────────┘ └──────┬──────┘ └─────────────┘ └───────────┘  │
 │                         │                                       │
 │  ┌──────────────┐ ┌─────────────────────────────────────────┐   │
-│  │ selection.py │ │ games/  Mini-games during loading        │   │
-│  │ Issue select │ │ zen_spiral, coffee_cup, rabbit, pong,     │   │
-│  │ state mgmt   │ │ wargames, matrix                         │   │
+│  │ selection.py │ │ games/  Mini-games during loading       │   │
+│  │ Issue select │ │ zen_spiral, coffee_cup, rabbit, pong,   │   │
+│  │ state mgmt   │ │ wargames, matrix                        │   │
 │  └──────────────┘ └─────────────────────────────────────────┘   │
 │                                                                 │
 │  types.py: ReviewIssue, ReviewResult data structures            │
