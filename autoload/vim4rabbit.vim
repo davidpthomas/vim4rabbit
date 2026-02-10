@@ -980,16 +980,23 @@ function! vim4rabbit#GameInput(key)
     redraw
 endfunction
 
-" Cancel game and close game buffer (return to loading)
+" Cancel game — return to game menu if playing, close if at menu
 function! vim4rabbit#CancelGame()
-    call s:StopGame()
+    if s:game_active
+        " Playing a game — stop it and return to game menu
+        call s:StopGame()
+        if s:game_bufnr != -1 && bufexists(s:game_bufnr)
+            execute 'bwipeout ' . s:game_bufnr
+        endif
+        call vim4rabbit#ShowGameMenu()
+        return
+    endif
 
-    " Close the game buffer — BufWipeout autocmd will restore 'p' keymap
+    " At the menu — close game buffer and return to review
+    call s:StopGame()
     if s:game_bufnr != -1 && bufexists(s:game_bufnr)
         execute 'bwipeout ' . s:game_bufnr
     endif
-
-    " Focus the review buffer
     if s:review_bufnr != -1 && bufexists(s:review_bufnr)
         let l:winnr = bufwinnr(s:review_bufnr)
         if l:winnr != -1
