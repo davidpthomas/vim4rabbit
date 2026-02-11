@@ -195,7 +195,8 @@ def get_animation_frame(frame_number: int, elapsed_secs: int = 0) -> List[str]:
         "",
         f"  Review in progress!  \U0001F552 {elapsed_str}",
         "",
-        "  This may take a few minutes depending on the size of the review.",
+        "  This may take a few minutes",
+        "  depending on the size of the review.",
         "  Your results will be displayed shortly...",
         "",
     ]
@@ -238,10 +239,9 @@ def render_help(width: int) -> List[str]:
     for key, desc in commands:
         content.append(f"  [{key}] {desc}")
 
-    # Bottom line with quit on the right
-    quit_text = "[q] Close"
-    padding = width - len(quit_text) - 4
-    content.append(" " * padding + quit_text + "  ")
+    # Quit line left-aligned with blank line separator
+    content.append("")
+    content.append("  [q] Quit")
 
     return content
 

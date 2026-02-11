@@ -40,7 +40,7 @@ class TestRenderHelp:
         """Test that help screen shows quit option."""
         content = render_help(80)
         full_text = "\n".join(content)
-        assert "[q] Close" in full_text
+        assert "[q] Quit" in full_text
 
     def test_help_adapts_to_width(self):
         """Test that help screen adapts to different widths."""
