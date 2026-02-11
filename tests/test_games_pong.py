@@ -1,7 +1,9 @@
 """Tests for vim4rabbit.games.pong module."""
 
 import pytest
-from vim4rabbit.games.pong import Pong, WINNING_SCORE, PADDLE_HEIGHT
+from vim4rabbit.games.pong import (
+    Pong, WINNING_SCORE, PADDLE_HEIGHT, CELL_PADDLE, CELL_NET,
+)
 
 
 class TestPongInit:
@@ -10,13 +12,13 @@ class TestPongInit:
     def test_default_dimensions(self):
         """Test that normal dimensions are stored correctly."""
         game = Pong(60, 30)
-        assert game.width == 60
+        assert game.width == 30  # 60 // 2 for 2-col cells
         assert game.height == 24  # height - 6 for scoreboard
 
     def test_minimum_dimensions(self):
         """Test that small values are clamped to minimums."""
         game = Pong(10, 10)
-        assert game.width == 30
+        assert game.width == 15
         assert game.height == 12
 
     def test_initial_scores(self):
@@ -253,21 +255,21 @@ class TestPongGetFrame:
         game = Pong(60, 30)
         frame = game.get_frame()
         grid_text = "".join(frame[:game.height])
-        assert "*" in grid_text
+        assert "🥚" in grid_text
 
     def test_frame_shows_paddles(self):
         """Test that paddle characters appear in the frame."""
         game = Pong(60, 30)
         frame = game.get_frame()
         grid_text = "".join(frame[:game.height])
-        assert "|" in grid_text
+        assert CELL_PADDLE in grid_text
 
     def test_frame_shows_net(self):
         """Test that center net character appears in the frame."""
         game = Pong(60, 30)
         frame = game.get_frame()
         grid_text = "".join(frame[:game.height])
-        assert ":" in grid_text
+        assert CELL_NET in grid_text
 
     def test_frame_has_status_line(self):
         """Test that status line shows game name and cancel."""

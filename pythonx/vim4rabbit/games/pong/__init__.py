@@ -2,7 +2,8 @@
 Pong game - Classic pong with j/k controls (V4R-51).
 
 Human plays left paddle, AI plays right paddle.
-Ball '*', paddles '|', center net ':'.
+Each grid cell is 2 terminal columns wide (emoji-compatible).
+Ball '🥚', paddles '❙', center net '·'.
 Game ends when a player reaches the winning score.
 """
 
@@ -14,13 +15,18 @@ WINNING_SCORE = 5
 PADDLE_HEIGHT = 5
 AI_SPEED = 1  # max cells AI paddle moves per tick
 
+CELL_EMPTY = "  "
+CELL_BALL = "\U0001f95a"   # 🥚
+CELL_PADDLE = "\u2759"     # ❙ medium vertical bar
+CELL_NET = "\u00b7"        # · middle dot
+
 
 class Pong:
     """Classic pong game with human vs AI."""
 
     def __init__(self, width: int, height: int) -> None:
         """Initialize paddles, ball, and scoring state."""
-        self.width = max(width, 30)
+        self.width = max(width // 2, 15)
         # Reserve 6 lines at bottom for scoreboard + status
         self.height = max(height - 6, 12)
         self.left_score = 0
@@ -157,29 +163,29 @@ class Pong:
 
     def get_frame(self) -> List[str]:
         """Render current game state."""
-        grid = [[" "] * self.width for _ in range(self.height)]
+        grid = [[CELL_EMPTY] * self.width for _ in range(self.height)]
 
         # Draw center net
         center_x = self.width // 2
         for y in range(self.height):
             if y % 2 == 0:
-                grid[y][center_x] = ":"
+                grid[y][center_x] = " " + CELL_NET
 
         # Draw left paddle
         for i in range(self.paddle_h):
             py = self.left_y + i
             if 0 <= py < self.height:
-                grid[py][self.left_x] = "|"
+                grid[py][self.left_x] = " " + CELL_PADDLE
 
         # Draw right paddle
         for i in range(self.paddle_h):
             py = self.right_y + i
             if 0 <= py < self.height:
-                grid[py][self.right_x] = "|"
+                grid[py][self.right_x] = " " + CELL_PADDLE
 
         # Draw ball
         if 0 <= self.ball_y < self.height and 0 <= self.ball_x < self.width:
-            grid[self.ball_y][self.ball_x] = "*"
+            grid[self.ball_y][self.ball_x] = CELL_BALL
 
         lines = ["".join(row) for row in grid]
 
@@ -195,7 +201,7 @@ class Pong:
 
     def _render_score_line(self) -> str:
         """Render the score display line."""
-        center = self.width // 2
+        center = self.width
         left_label = f"YOU: {self.left_score}"
         right_label = f"AI: {self.right_score}"
         # Pad to center around the midpoint
@@ -207,7 +213,7 @@ class Pong:
         """Render a visual score bar."""
         left_dots = "*" * self.left_score + "." * (WINNING_SCORE - self.left_score)
         right_dots = "*" * self.right_score + "." * (WINNING_SCORE - self.right_score)
-        center = self.width // 2
+        center = self.width
         left_part = f"  [{left_dots}]".ljust(center)
         right_part = f"[{right_dots}]"
         return left_part + right_part
@@ -218,6 +224,10 @@ class Pong:
 
     def get_game_over_frame(self) -> List[str]:
         """Show winner celebration screen."""
+        term_w = self.width * 2
+        box_w = 35  # inner width of the box
+        pad = max((term_w - box_w) // 2, 0) * " "
+
         lines: List[str] = []
         lines.append("")
         lines.append("")
@@ -225,22 +235,24 @@ class Pong:
         for _ in range(max(cy, 0)):
             lines.append("")
 
+        score_inner = f"     Score: {self.left_score} - {self.right_score}"
+
         if self._winner == "left":
-            lines.append("        ╔═══════════════════════════════╗")
-            lines.append("        ║                               ║")
-            lines.append("        ║     YOU WIN!                  ║")
-            lines.append(f"        ║     Score: {self.left_score} - {self.right_score}                 ║")
-            lines.append("        ║                               ║")
-            lines.append("        ║     Great game, champion!     ║")
-            lines.append("        ╚═══════════════════════════════╝")
+            lines.append(f"{pad}╔═══════════════════════════════╗")
+            lines.append(f"{pad}║                               ║")
+            lines.append(f"{pad}║     YOU WIN!                  ║")
+            lines.append(f"{pad}║{score_inner:<31}║")
+            lines.append(f"{pad}║                               ║")
+            lines.append(f"{pad}║     Great game, champion!     ║")
+            lines.append(f"{pad}╚═══════════════════════════════╝")
         else:
-            lines.append("        ╔═══════════════════════════════╗")
-            lines.append("        ║                               ║")
-            lines.append("        ║     AI WINS!                  ║")
-            lines.append(f"        ║     Score: {self.left_score} - {self.right_score}                 ║")
-            lines.append("        ║                               ║")
-            lines.append("        ║     Better luck next time!    ║")
-            lines.append("        ╚═══════════════════════════════╝")
+            lines.append(f"{pad}╔═══════════════════════════════╗")
+            lines.append(f"{pad}║                               ║")
+            lines.append(f"{pad}║     AI WINS!                  ║")
+            lines.append(f"{pad}║{score_inner:<31}║")
+            lines.append(f"{pad}║                               ║")
+            lines.append(f"{pad}║     Better luck next time!    ║")
+            lines.append(f"{pad}╚═══════════════════════════════╝")
 
         lines.append("")
         lines.append("  Pong  |  [c] cancel")
