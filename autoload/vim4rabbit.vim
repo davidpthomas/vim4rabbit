@@ -395,8 +395,8 @@ function! s:OnReviewExit(job, exit_status)
         let l:result = py3eval("vim4rabbit.vim_parse_review_output(" . json_encode(l:output) . ")")
         let l:review = py3eval('vim4rabbit.vim_format_review(' .
             \ l:result.success . ', ' .
-            \ string(l:result.issues_data) . ', ' .
-            \ string(l:result.error_message) . ', ' .
+            \ json_encode(l:result.issues_data) . ', ' .
+            \ json_encode(l:result.error_message) . ', ' .
             \ s:review_elapsed_secs . ')')
         " Store issues data for Claude integration
         call s:StoreIssuesData(l:result.issues_data)
@@ -477,8 +477,8 @@ function! s:UpdateReviewBuffer(content, issue_count)
     " Initialize selection tracking in Python
     call py3eval('vim4rabbit.vim_init_selections(' . a:issue_count . ')')
 
-    " Remap 'c' from cancel to close now that job is done
-    nnoremap <buffer> <silent> c :call vim4rabbit#CloseReview()<CR>
+    " Remap 'c' from cancel to close-with-confirmation now that job is done
+    nnoremap <buffer> <silent> c :call vim4rabbit#ConfirmCloseReview()<CR>
 
     execute l:cur_winnr . 'wincmd w'
     redraw
@@ -514,6 +514,21 @@ function! vim4rabbit#CloseReview()
 
     if s:review_bufnr != -1 && bufexists(s:review_bufnr)
         execute 'bwipeout ' . s:review_bufnr
+    endif
+endfunction
+
+" Confirm before closing review results
+function! vim4rabbit#ConfirmCloseReview()
+    echohl WarningMsg
+    echo 'Are you sure? (y|N)'
+    echohl None
+    let l:char = getchar()
+    if type(l:char) == v:t_number
+        let l:char = nr2char(l:char)
+    endif
+    redraw!
+    if l:char ==? 'y'
+        call vim4rabbit#CloseReview()
     endif
 endfunction
 
