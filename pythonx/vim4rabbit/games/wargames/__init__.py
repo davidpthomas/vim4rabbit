@@ -18,6 +18,27 @@ COUNTRIES = [
     "CANADA", "IRAN", "NORTH KOREA", "EGYPT", "ISRAEL",
 ]
 
+CHESS_BOARD = [
+    "     ┌───┬───┬───┬───┬───┬───┬───┬───┐",
+    "   8 │ ♜ │ ♞ │ ♝ │ ♛ │ ♚ │ ♝ │ ♞ │ ♜ │",
+    "     ├───┼───┼───┼───┼───┼───┼───┼───┤",
+    "   7 │ ♟ │ ♟ │ ♟ │ ♟ │ ♟ │ ♟ │ ♟ │ ♟ │",
+    "     ├───┼───┼───┼───┼───┼───┼───┼───┤",
+    "   6 │   │   │   │   │   │   │   │   │",
+    "     ├───┼───┼───┼───┼───┼───┼───┼───┤",
+    "   5 │   │   │   │   │   │   │   │   │",
+    "     ├───┼───┼───┼───┼───┼───┼───┼───┤",
+    "   4 │   │   │   │   │   │   │   │   │",
+    "     ├───┼───┼───┼───┼───┼───┼───┼───┤",
+    "   3 │   │   │   │   │   │   │   │   │",
+    "     ├───┼───┼───┼───┼───┼───┼───┼───┤",
+    "   2 │ ♙ │ ♙ │ ♙ │ ♙ │ ♙ │ ♙ │ ♙ │ ♙ │",
+    "     ├───┼───┼───┼───┼───┼───┼───┼───┤",
+    "   1 │ ♖ │ ♘ │ ♗ │ ♕ │ ♔ │ ♗ │ ♘ │ ♖ │",
+    "     └───┴───┴───┴───┴───┴───┴───┴───┘",
+    "       a   b   c   d   e   f   g   h",
+]
+
 GLOBE = [
     "               _.--\"\"\"--.._",
     "            .'  N. AMERICA  '.",
@@ -87,8 +108,8 @@ class WarGames:
     def handle_input(self, key: str) -> None:
         """Process a keypress."""
         if self._game_over:
-            if key == "o" and self.phase != "great_choice":
-                self.phase = "great_choice"
+            if key == "o" and self.phase != "chess":
+                self.phase = "chess"
             return
 
         if self.phase == "password":
@@ -219,8 +240,8 @@ class WarGames:
 
     def get_game_over_frame(self) -> List[str]:
         """The iconic WarGames ending."""
-        if self.phase == "great_choice":
-            return self._frame_great_choice()
+        if self.phase == "chess":
+            return self._frame_chess()
 
         lines: List[str] = []
         lines.append("")
@@ -247,29 +268,17 @@ class WarGames:
 
         return lines
 
-    def _frame_great_choice(self) -> List[str]:
-        """Big bold 'Great Choice!' screen."""
+    def _frame_chess(self) -> List[str]:
+        """Chess board screen — coming soon."""
         lines: List[str] = []
-        cy = max((self.height - 12) // 2, 0)
+        cy = max((self.height - len(CHESS_BOARD) - 4) // 2, 0)
         for _ in range(cy):
             lines.append("")
 
-        lines.append("    ╔══════════════════════════════════════════════════╗")
-        lines.append("    ║                                                  ║")
-        lines.append("    ║    ██████ ██████ ██████  █████ ████████ ██       ║")
-        lines.append("    ║   ██      ██   █ ██     ██   ██   ██   ██        ║")
-        lines.append("    ║   ██  ██  █████  ████   ███████   ██   ██        ║")
-        lines.append("    ║   ██   █  ██  █  ██     ██   ██   ██             ║")
-        lines.append("    ║    █████  ██  ██ ██████ ██   ██   ██   ██        ║")
-        lines.append("    ║                                                  ║")
-        lines.append("    ║    █████ ██  ██  █████  ██  █████ ██████ ██      ║")
-        lines.append("    ║   ██     ██  ██ ██   ██ ██ ██     ██     ██      ║")
-        lines.append("    ║   ██     ██████ ██   ██ ██ ██     ████           ║")
-        lines.append("    ║   ██     ██  ██ ██   ██ ██ ██     ██             ║")
-        lines.append("    ║    █████ ██  ██  █████  ██  █████ ██████ ██      ║")
-        lines.append("    ║                                                  ║")
-        lines.append("    ║                                                  ║")
-        lines.append("    ╚══════════════════════════════════════════════════╝")
+        for row in CHESS_BOARD:
+            lines.append("   " + row)
+        lines.append("")
+        lines.append("   Coming Soon...")
         lines.append("")
         lines.append("  WarGames  |  [c] cancel")
 

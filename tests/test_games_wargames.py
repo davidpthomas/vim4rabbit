@@ -273,24 +273,28 @@ class TestWarGamesGameOver:
         game.handle_input("x")
         assert game.launches == 0
 
-    def test_great_choice_phase(self):
-        """Test pressing 'o' after game over shows Great Choice screen."""
+    def test_chess_phase(self):
+        """Test pressing 'o' after game over shows chess board screen."""
         game = WarGames(60, 30)
         game._game_over = True
         game.handle_input("o")
-        assert game.phase == "great_choice"
+        assert game.phase == "chess"
         frame = game.get_game_over_frame()
         full = "\n".join(frame)
-        assert "cancel" in full
+        assert "Coming Soon" in full
+        assert "[c] cancel" in full
+        # Verify chessboard elements
+        assert "♔" in full
+        assert "♚" in full
 
-    def test_great_choice_only_once(self):
-        """Test pressing 'o' again while already in great_choice is a no-op."""
+    def test_chess_only_once(self):
+        """Test pressing 'o' again while already in chess phase is a no-op."""
         game = WarGames(60, 30)
         game._game_over = True
         game.handle_input("o")
-        assert game.phase == "great_choice"
+        assert game.phase == "chess"
         game.handle_input("o")
-        assert game.phase == "great_choice"
+        assert game.phase == "chess"
 
 
 class TestWarGamesAIMissileFrame:
