@@ -472,6 +472,7 @@ function! s:UpdateReviewBuffer(content, issue_count)
     setlocal foldlevel=0
     setlocal foldtext=vim4rabbit#FoldText()
     setlocal foldenable
+    setlocal wrap
 
     " Initialize selection tracking in Python
     call py3eval('vim4rabbit.vim_init_selections(' . a:issue_count . ')')
