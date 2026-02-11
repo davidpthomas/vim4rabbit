@@ -75,13 +75,13 @@ function! vim4rabbit#Help()
         endif
     endif
 
-    " Calculate 20% of total window height (fixed at 6 lines for compact display)
+    " Calculate 20% of total window height (fixed at 7 lines for compact display)
     let l:height = float2nr(&lines * 0.2)
-    if l:height < 6
-        let l:height = 6
+    if l:height < 7
+        let l:height = 7
     endif
-    if l:height > 6
-        let l:height = 6
+    if l:height > 7
+        let l:height = 7
     endif
 
     " Open a new split at the bottom
@@ -101,6 +101,7 @@ function! vim4rabbit#Help()
     setlocal nonumber
     setlocal norelativenumber
     setlocal signcolumn=no
+    setlocal nolist
     setlocal winfixheight
 
     " Render help content
