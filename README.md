@@ -43,7 +43,26 @@ Press `c` at any time to cancel and go back to the review panel.
 
 ## Installation
 
-NOTE: Currently under review for public usage circa 2026/02/05
+### Prerequisites
+
+- Vim 8.0+ compiled with Python 3 support — verify with `:vim --version | grep python3`
+- [CodeRabbit CLI](#coderabbit-cli-setup) (required)
+- [Claude Code CLI](#claude-code-cli-setup) (optional, for AI-powered fixes)
+
+### vim-plug
+
+Add the following to your `~/.vimrc`:
+
+```vim
+Plug 'davidpthomas/vim4rabbit'
+```
+
+Then reload your config and install:
+
+```vim
+:source ~/.vimrc
+:PlugInstall
+```
 
 
 ## Usage
@@ -73,12 +92,6 @@ After review completes:
 - `\a` - Select all issues
 - `\n` - Deselect all issues
 - `@` - Launch Claude Code with selected issues
-
-## Requirements
-
-- Vim 8.0+ with Python 3 support (`+python3`)
-- CodeRabbit CLI (see setup below)
-- Claude Code CLI (optional, for AI-powered fixes)
 
 ## CodeRabbit CLI Setup
 
