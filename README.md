@@ -2,6 +2,8 @@
 
 A Vim plugin for Software Engineers using CodeRabbit AI to do code reviews and leverage Claude Code AI to implement the suggested fixes.  
 
+NOTE: Will support swapping in AI Agent of choice.
+
 No mouse required.
 
 ## Features
