@@ -1,6 +1,6 @@
 # vim4rabbit
 
-A Vim plugin for Software Engineers using CodeRabbit AI to do code reviews and leverage A coding AI to implement the suggested fixes.  
+A Vim plugin for Software Engineers using CodeRabbit AI to do code reviews and leveragea a coding AI to implement the suggested fixes.  
 
 NOTE: Will support swapping in AI Agent of choice.
 
